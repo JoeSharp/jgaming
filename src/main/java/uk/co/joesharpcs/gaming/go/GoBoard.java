@@ -3,6 +3,8 @@ package uk.co.joesharpcs.gaming.go;
 import uk.co.joesharpcs.gaming.go.exceptions.*;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 public class GoBoard {
@@ -56,7 +58,53 @@ public class GoBoard {
 
         this.board[row][col] = player.getPointValue();
 
+        checkCaptures(player, row, col);
+
         this.whosTurn = this.whosTurn.nextPlayer();
+    }
+
+    private void checkCaptures(Player player, int row, int col) {
+        BoardLocation.getConnected(size, row, col,
+                (r, c) -> checkCapturedGroup(player, r, c)
+        );
+    }
+
+    private void checkCapturedGroup(Player player, int row, int col) {
+        // Are we also occupying this square?
+        if (player.getPointValue().equals(board[row][col])) {
+            return;
+        }
+
+        // Is the square empty?
+        if (PointValue.EMPTY.equals(board[row][col])) {
+            return;
+        }
+
+        // It contains the other player, does the other player have any liberties from this spot?
+        AtomicBoolean libertyFound = new AtomicBoolean(false);
+
+
+    }
+
+    public void findLiberties(Player asPlayer, int row, int col, BiConsumer<Integer, Integer> receiver) {
+        findLiberties(new HashSet<>(), asPlayer, row, col, receiver);
+    }
+
+    private void findLiberties(Set<String> alreadyAssessed, Player asPlayer, int row, int col, BiConsumer<Integer, Integer> receiver) {
+        BoardLocation.getConnected(size, row, col, (r, c) -> {
+            // Skip it if we've already assessed it
+            String key = String.format("%d-%d", r, c);
+            if (alreadyAssessed.contains(key)) return;
+            alreadyAssessed.add(key);
+
+            if (PointValue.EMPTY.equals(board[r][c])) {
+                // Empty..it's a liberty!
+                receiver.accept(r, c);
+            } else if (asPlayer.getPointValue().equals(board[r][c])) {
+                // Have we found more of ourselves?
+                findLiberties(alreadyAssessed, asPlayer, r, c, receiver);
+            }
+        });
     }
 
     private void validatePoint(int row, int col) throws InvalidPointLocationException {

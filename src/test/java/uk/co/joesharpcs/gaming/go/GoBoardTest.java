@@ -3,7 +3,10 @@ package uk.co.joesharpcs.gaming.go;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.Mockito;
 import uk.co.joesharpcs.gaming.go.exceptions.*;
+
+import java.util.function.BiConsumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -218,6 +221,56 @@ class GoBoardTest {
         assertEquals(PointValue.BLACK, value24);
         assertEquals(PointValue.WHITE, value34);
         assertEquals(PointValue.EMPTY, value53);
+    }
+
+    @Test
+    public void findSingleLiberty() throws GoException {
+        // Given
+        BiConsumer<Integer, Integer> receiver = Mockito.mock();
+        var board = GoBoard.fromString("""
+                . . . . . . . . .
+                . . . . . . . . .
+                . . . . . . . . .
+                . . . W . . . . .
+                . . W B B . . . .
+                . W B W B W . . .
+                . B W W B . . . .
+                . . B . . . . . .
+                . . . . . . . . .
+                """);
+
+        // When
+        board.findLiberties(Player.WHITE,5, 3, receiver);
+
+        // Then
+        Mockito.verify(receiver).accept(7, 3);
+        Mockito.verifyNoMoreInteractions(receiver);
+    }
+
+    @Test
+    public void findMultipleLiberty() throws GoException {
+        // Given
+        BiConsumer<Integer, Integer> receiver = Mockito.mock();
+        var board = GoBoard.fromString("""
+                . . . . . . . . .
+                . . . . . . . . .
+                . . . . . . . . .
+                . . . W . . . . .
+                . . W . B . . . .
+                . W . W B W . . .
+                . B W W B . . . .
+                . . B . . . . . .
+                . . . . . . . . .
+                """);
+
+        // When
+        board.findLiberties(Player.WHITE, 5, 3, receiver);
+
+        // Then
+        Mockito.verify(receiver).accept(7, 3);
+        Mockito.verify(receiver).accept(5, 2);
+        Mockito.verify(receiver).accept(4, 3);
+        Mockito.verifyNoMoreInteractions(receiver);
     }
 
     @Test
