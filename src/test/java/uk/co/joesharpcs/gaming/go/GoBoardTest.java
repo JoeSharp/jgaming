@@ -16,6 +16,8 @@ class GoBoardTest {
         // Then
         assertEquals(19, board.getSize());
         assertEquals(Player.BLACK, board.getWhosTurn());
+        assertEquals(0, board.getCaptures(Player.WHITE));
+        assertEquals(0, board.getCaptures(Player.BLACK));
     }
 
     @Test
@@ -108,9 +110,69 @@ class GoBoardTest {
     }
 
     @Test
+    public void testBoardEqualityTrue() throws GoException {
+        String boardString = """
+                .........
+                .........
+                ....BBB..
+                ...BW.B..
+                ....WWB..
+                ....BB...
+                .........
+                .........
+                .........
+                """;
+
+        // Given
+        var board1 = GoBoard.fromString(boardString);
+        var board2 = GoBoard.fromString(boardString);
+
+        // When
+        var result1 = board1.equals(board2);
+        board1.move(Player.BLACK, 1, 1);
+        var result2 = board1.equals(board2);
+
+        // Then
+        assertTrue(result1);
+        assertFalse(result2);
+    }
+
+    @Test
+    public void testToString() throws GoException {
+        // Given
+        var board = GoBoard.fromString( """
+                .........
+                .........
+                ....BBB..
+                ...BW.B..
+                ....WWB..
+                ....BB...
+                .........
+                .........
+                .........
+                """);
+
+        // When
+        var result = board.toString();
+
+        // Then
+        var expected =  """
+                . . . . . . . . .
+                . . . . . . . . .
+                . . . . B B B . .
+                . . . B W . B . .
+                . . . . W W B . .
+                . . . . B B . . .
+                . . . . . . . . .
+                . . . . . . . . .
+                . . . . . . . . .""";
+        assertEquals(expected, result);
+    }
+
+    @Test
     public void initialisedByString() throws GoException {
         // Given
-        var board = new GoBoard(9, """
+        var board = GoBoard.fromString( """
                 .........
                 .........
                 ....BBB..
@@ -131,6 +193,66 @@ class GoBoardTest {
         assertEquals(PointValue.BLACK, value24);
         assertEquals(PointValue.WHITE, value34);
         assertEquals(PointValue.EMPTY, value53);
+    }
+
+    @Test
+    public void initialisedByStringWithSpaces() throws GoException {
+        // Given
+        var board = GoBoard.fromString("""
+                . . . . . . . . .
+                . . . . . . . . .
+                . . . . B B B . .
+                . . . B W . B . .
+                . . . . W W B . .
+                . . . . B B . . .
+                . . . . . . . . .
+                . . . . . . . . .
+                . . . . . . . . .""");
+
+        // When
+        var value24 = board.getValue(2, 4);
+        var value34 = board.getValue(3, 4);
+        var value53 = board.getValue(5, 3);
+
+        // Then
+        assertEquals(PointValue.BLACK, value24);
+        assertEquals(PointValue.WHITE, value34);
+        assertEquals(PointValue.EMPTY, value53);
+    }
+
+    @Test
+    public void captureCorrectly() throws GoException {
+        // Given
+        var board = GoBoard.fromString( """
+                . . . . . . . . .
+                . . . . . . . . .
+                . . . . . . . . .
+                . . . W . . . . .
+                . . W B B . . . .
+                . W B W B W . . .
+                . B W W B . . . .
+                . . B . . . . . .
+                . . . . . . . . .
+                """);
+
+        // When
+        board.move(Player.BLACK, 7, 3);
+
+        // Then
+        GoBoard refBoard =  GoBoard.fromString("""
+                . . . . . . . . .
+                . . . . . . . . .
+                . . . . . . . . .
+                . . . W . . . . .
+                . . W B B . . . .
+                . W B . B W . . .
+                . B . . B . . . .
+                . . B B . . . . .
+                . . . . . . . . .
+                """);
+        assertEquals(refBoard, board);
+        assertEquals(3, board.getCaptures(Player.BLACK));
+        assertEquals(0, board.getCaptures(Player.WHITE));
     }
 
     @ParameterizedTest
@@ -164,8 +286,8 @@ class GoBoardTest {
                 ........
                 ........
                 """})
-    public void initialisedByInvalidString(String value) throws GoException {
+    public void initialisedByInvalidString(String value) {
         // Given
-        assertThrows(InvalidBoardStateStringException.class, () -> new GoBoard(9, value));
+        assertThrows(InvalidBoardStateStringException.class, () -> GoBoard.fromString(value));
     }
 }

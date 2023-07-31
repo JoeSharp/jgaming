@@ -16,7 +16,7 @@ public enum PointValue {
         this.asChar = asChar;
     }
 
-    String toChar() {
+    public String toString() {
         return this.asChar;
     }
 

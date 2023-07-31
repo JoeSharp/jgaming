@@ -2,25 +2,21 @@ package uk.co.joesharpcs.gaming.go;
 
 import uk.co.joesharpcs.gaming.go.exceptions.*;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class GoBoard {
     private static final int DEFAULT_SIZE = 19;
 
-    private int size;
+    private final int size;
     private Player whosTurn;
 
-    private PointValue[][] board;
+    private final PointValue[][] board;
+
+    private final Map<Player, Integer> captures;
 
     GoBoard() {
         this(DEFAULT_SIZE);
-    }
-
-    GoBoard(int size, String initialState) throws InvalidBoardStateStringException {
-        this(size);
-        fromString(initialState);
     }
 
     GoBoard(int size) {
@@ -32,6 +28,7 @@ public class GoBoard {
                 this.board[row][col] = PointValue.EMPTY;
             }
         }
+        this.captures = Arrays.stream(Player.values()).collect(Collectors.toMap(p -> p, p -> 0));
     }
 
     public int getSize() {
@@ -40,6 +37,10 @@ public class GoBoard {
 
     public Player getWhosTurn() {
         return this.whosTurn;
+    }
+
+    public Integer getCaptures(Player player) {
+        return this.captures.get(player);
     }
 
     public void move(Player player, int row, int col) throws GoException {
@@ -63,37 +64,71 @@ public class GoBoard {
         if (col < 0 || col >= this.size) throw new InvalidPointLocationException();
     }
 
-    private void fromString(String asString) throws InvalidBoardStateStringException {
+    @Override
+    public String toString() {
+        StringJoiner rowJoiner = new StringJoiner("\n");
+
+        for (var row : board) {
+            StringJoiner cellJoiner = new StringJoiner(" ");
+            for (var cell : row) {
+                cellJoiner.add(cell.toString());
+            }
+            rowJoiner.add(cellJoiner.toString());
+        }
+
+        return rowJoiner.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GoBoard goBoard = (GoBoard) o;
+        return size == goBoard.size && Arrays.deepEquals(board, goBoard.board);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(size, whosTurn);
+        result = 31 * result + Arrays.deepHashCode(board);
+        return result;
+    }
+
+    public static GoBoard fromString(String asString) throws InvalidBoardStateStringException {
+
         List<String> rows = Arrays
                 .stream(asString.split("\n"))
-                .filter(row -> !row.isBlank())
+                .filter(StringUtils::isNotBlank)
                 .map(String::trim)
                 .toList();
 
-        if (rows.size() != this.size) {
-            throw new InvalidBoardStateStringException("Incorrect number of rows");
-        }
+        final GoBoard board = new GoBoard(rows.size());
 
-        for (int rowIndex = 0; rowIndex < this.size; rowIndex++) {
-            List<String> cellValues = Arrays.stream(rows.get(rowIndex).split("")).toList();
+        for (int rowIndex = 0; rowIndex < board.size; rowIndex++) {
+            List<String> cellValues = Arrays.stream(rows.get(rowIndex).split(""))
+                    .map(String::trim)
+                    .filter(StringUtils::isNotBlank)
+                    .toList();
 
-            if (cellValues.size() != this.size) {
+            if (cellValues.size() != board.size) {
                 throw new InvalidBoardStateStringException(
                         String.format("Incorrect number of columns in row %d", rowIndex));
             }
 
-            for (int cellIndex=0; cellIndex < this.size; cellIndex++) {
+            for (int cellIndex=0; cellIndex < board.size; cellIndex++) {
                 var rawValue = cellValues.get(cellIndex);
 
                 try {
                     var value = PointValue.fromChar(rawValue);
-                    this.board[rowIndex][cellIndex] = value;
+                    board.board[rowIndex][cellIndex] = value;
                 } catch (InvalidPointValueException e) {
                     throw new InvalidBoardStateStringException(
                             String.format("Invalid value for row %d, cell: %d, '%s'", rowIndex, cellIndex, rawValue));
                 }
             }
         }
+
+        return board;
     }
 
     public PointValue getValue(int row, int col) throws InvalidPointLocationException {
