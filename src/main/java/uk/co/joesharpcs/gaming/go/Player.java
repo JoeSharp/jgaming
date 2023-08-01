@@ -14,7 +14,7 @@ public enum Player {
         return this.pointValue;
     }
 
-    public Player nextPlayer() {
+    public Player otherPlayer() {
         return WHITE.equals(this) ? BLACK : WHITE;
     }
 }

@@ -2,7 +2,23 @@ package uk.co.joesharpcs.gaming.go;
 
 import java.util.function.BiConsumer;
 
-public interface BoardLocation {
+public class BoardLocation {
+    final int row;
+    final int col;
+
+    public BoardLocation(int row, int col) {
+        this.row = row;
+        this.col = col;
+    }
+
+    public int getRow() {
+        return this.row;
+    }
+
+    public int getCol() {
+        return this.col;
+    }
+
     /**
      * Given a location on a board, passes the location of all valid connected locations.
      * @param boardSize The size of the board
@@ -10,7 +26,9 @@ public interface BoardLocation {
      * @param col The column we are assessing
      * @param receiver Receives the connected locations
      */
-    static void getConnected(int boardSize, int row, int col, BiConsumer<Integer, Integer> receiver) {
+    static void getConnected(int boardSize,
+                             int row, int col,
+                             BiConsumer<Integer, Integer> receiver) {
         if (col > 0) { // left
             receiver.accept(row, col - 1);
         }

@@ -4,6 +4,7 @@ import uk.co.joesharpcs.gaming.go.exceptions.*;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
@@ -15,7 +16,7 @@ public class GoBoard {
 
     private final PointValue[][] board;
 
-    private final Map<Player, Integer> captures;
+    private final Map<Player, AtomicInteger> captures;
 
     GoBoard() {
         this(DEFAULT_SIZE);
@@ -30,7 +31,7 @@ public class GoBoard {
                 this.board[row][col] = PointValue.EMPTY;
             }
         }
-        this.captures = Arrays.stream(Player.values()).collect(Collectors.toMap(p -> p, p -> 0));
+        this.captures = Arrays.stream(Player.values()).collect(Collectors.toMap(p -> p, p -> new AtomicInteger(0)));
     }
 
     public int getSize() {
@@ -42,7 +43,7 @@ public class GoBoard {
     }
 
     public Integer getCaptures(Player player) {
-        return this.captures.get(player);
+        return this.captures.get(player).get();
     }
 
     public void move(Player player, int row, int col) throws GoException {
@@ -60,7 +61,7 @@ public class GoBoard {
 
         checkCaptures(player, row, col);
 
-        this.whosTurn = this.whosTurn.nextPlayer();
+        this.whosTurn = this.whosTurn.otherPlayer();
     }
 
     private void checkCaptures(Player player, int row, int col) {
@@ -82,15 +83,33 @@ public class GoBoard {
 
         // It contains the other player, does the other player have any liberties from this spot?
         AtomicBoolean libertyFound = new AtomicBoolean(false);
+        Set<BoardLocation> group = new HashSet<>();
+        findLiberties(player.otherPlayer(),
+                row, col,
+                (r, c) -> libertyFound.set(true),
+                (r, c) -> group.add(new BoardLocation(r, c)));
 
-
+        if (!libertyFound.get()) {
+            var playerCaptures = captures.get(player);
+            group.forEach(loc -> {
+                playerCaptures.incrementAndGet();
+                board[loc.getRow()][loc.getCol()] = PointValue.EMPTY;
+            });
+        }
     }
 
-    public void findLiberties(Player asPlayer, int row, int col, BiConsumer<Integer, Integer> receiver) {
-        findLiberties(new HashSet<>(), asPlayer, row, col, receiver);
+    public void findLiberties(Player asPlayer,
+                              int row, int col,
+                              BiConsumer<Integer, Integer> libertyReceiver,
+                              BiConsumer<Integer, Integer> groupReceiver) {
+        findLiberties(new HashSet<>(), asPlayer, row, col, libertyReceiver, groupReceiver);
     }
 
-    private void findLiberties(Set<String> alreadyAssessed, Player asPlayer, int row, int col, BiConsumer<Integer, Integer> receiver) {
+    private void findLiberties(Set<String> alreadyAssessed,
+                               Player asPlayer,
+                               int row, int col,
+                               BiConsumer<Integer, Integer> libertyReceiver,
+                               BiConsumer<Integer, Integer> groupReceiver) {
         BoardLocation.getConnected(size, row, col, (r, c) -> {
             // Skip it if we've already assessed it
             String key = String.format("%d-%d", r, c);
@@ -99,10 +118,11 @@ public class GoBoard {
 
             if (PointValue.EMPTY.equals(board[r][c])) {
                 // Empty..it's a liberty!
-                receiver.accept(r, c);
+                libertyReceiver.accept(r, c);
             } else if (asPlayer.getPointValue().equals(board[r][c])) {
                 // Have we found more of ourselves?
-                findLiberties(alreadyAssessed, asPlayer, r, c, receiver);
+                groupReceiver.accept(r, c);
+                findLiberties(alreadyAssessed, asPlayer, r, c, libertyReceiver, groupReceiver);
             }
         });
     }

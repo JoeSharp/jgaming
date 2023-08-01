@@ -226,7 +226,8 @@ class GoBoardTest {
     @Test
     public void findSingleLiberty() throws GoException {
         // Given
-        BiConsumer<Integer, Integer> receiver = Mockito.mock();
+        BiConsumer<Integer, Integer> libertyReceiver = Mockito.mock();
+        BiConsumer<Integer, Integer> groupReceiver = Mockito.mock();
         var board = GoBoard.fromString("""
                 . . . . . . . . .
                 . . . . . . . . .
@@ -240,17 +241,26 @@ class GoBoardTest {
                 """);
 
         // When
-        board.findLiberties(Player.WHITE,5, 3, receiver);
+        board.findLiberties(Player.WHITE,
+                5, 3,
+                libertyReceiver,
+                groupReceiver);
 
         // Then
-        Mockito.verify(receiver).accept(7, 3);
-        Mockito.verifyNoMoreInteractions(receiver);
+        Mockito.verify(libertyReceiver).accept(7, 3);
+        Mockito.verifyNoMoreInteractions(libertyReceiver);
+
+        Mockito.verify(groupReceiver).accept(5, 3);
+        Mockito.verify(groupReceiver).accept(6, 3);
+        Mockito.verify(groupReceiver).accept(6, 2);
+        Mockito.verifyNoMoreInteractions(groupReceiver);
     }
 
     @Test
     public void findMultipleLiberty() throws GoException {
         // Given
-        BiConsumer<Integer, Integer> receiver = Mockito.mock();
+        BiConsumer<Integer, Integer> libertyReceiver = Mockito.mock();
+        BiConsumer<Integer, Integer> groupReceiver = Mockito.mock();
         var board = GoBoard.fromString("""
                 . . . . . . . . .
                 . . . . . . . . .
@@ -264,13 +274,21 @@ class GoBoardTest {
                 """);
 
         // When
-        board.findLiberties(Player.WHITE, 5, 3, receiver);
+        board.findLiberties(Player.WHITE,
+                5, 3,
+                libertyReceiver,
+                groupReceiver);
 
         // Then
-        Mockito.verify(receiver).accept(7, 3);
-        Mockito.verify(receiver).accept(5, 2);
-        Mockito.verify(receiver).accept(4, 3);
-        Mockito.verifyNoMoreInteractions(receiver);
+        Mockito.verify(libertyReceiver).accept(7, 3);
+        Mockito.verify(libertyReceiver).accept(5, 2);
+        Mockito.verify(libertyReceiver).accept(4, 3);
+        Mockito.verifyNoMoreInteractions(libertyReceiver);
+
+        Mockito.verify(groupReceiver).accept(5, 3);
+        Mockito.verify(groupReceiver).accept(6, 3);
+        Mockito.verify(groupReceiver).accept(6, 2);
+        Mockito.verifyNoMoreInteractions(groupReceiver);
     }
 
     @Test

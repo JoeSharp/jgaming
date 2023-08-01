@@ -11,7 +11,7 @@ public class PlayerTest {
         var player = Player.WHITE;
 
         // When
-        var result = player.nextPlayer();
+        var result = player.otherPlayer();
 
         // Then
         assertEquals(Player.BLACK, result);
@@ -23,7 +23,7 @@ public class PlayerTest {
         var player = Player.BLACK;
 
         // When
-        var result = player.nextPlayer();
+        var result = player.otherPlayer();
 
         // Then
         assertEquals(Player.WHITE, result);
