@@ -12,7 +12,7 @@ public class BoardLocationTest {
         BiConsumer<Integer, Integer> receiver = Mockito.mock();
 
         // When
-        BoardLocation.getConnected(4, 0, 0, receiver);
+        BoardLocation.getAdjacent(4, 0, 0, receiver);
 
         // Then
         Mockito.verify(receiver).accept(1, 0);
@@ -25,7 +25,7 @@ public class BoardLocationTest {
         BiConsumer<Integer, Integer> receiver = Mockito.mock();
         
         // When
-        BoardLocation.getConnected(4, 0, 3, receiver);
+        BoardLocation.getAdjacent(4, 0, 3, receiver);
 
         // Then
         Mockito.verify(receiver).accept(1, 3);
@@ -38,7 +38,7 @@ public class BoardLocationTest {
         BiConsumer<Integer, Integer> receiver = Mockito.mock();
         
         // When
-        BoardLocation.getConnected(4, 0, 1, receiver);
+        BoardLocation.getAdjacent(4, 0, 1, receiver);
 
         // Then
         Mockito.verify(receiver).accept(1, 1);
@@ -53,7 +53,7 @@ public class BoardLocationTest {
         BiConsumer<Integer, Integer> receiver = Mockito.mock();
 
         // When
-        BoardLocation.getConnected(4, 3, 0, receiver);
+        BoardLocation.getAdjacent(4, 3, 0, receiver);
 
         // Then
         Mockito.verify(receiver).accept(2, 0);
@@ -66,7 +66,7 @@ public class BoardLocationTest {
         BiConsumer<Integer, Integer> receiver = Mockito.mock();
 
         // When
-        BoardLocation.getConnected(4, 3, 3, receiver);
+        BoardLocation.getAdjacent(4, 3, 3, receiver);
 
         // Then
         Mockito.verify(receiver).accept(2, 3);
@@ -79,7 +79,7 @@ public class BoardLocationTest {
         BiConsumer<Integer, Integer> receiver = Mockito.mock();
         
         // When
-        BoardLocation.getConnected(4, 3, 1, receiver);
+        BoardLocation.getAdjacent(4, 3, 1, receiver);
 
         // Then
         Mockito.verify(receiver).accept(3, 0);
@@ -94,7 +94,7 @@ public class BoardLocationTest {
         BiConsumer<Integer, Integer> receiver = Mockito.mock();
 
         // When
-        BoardLocation.getConnected(4, 2, 0, receiver);
+        BoardLocation.getAdjacent(4, 2, 0, receiver);
 
         // Then
         Mockito.verify(receiver).accept(2, 1);
@@ -108,7 +108,7 @@ public class BoardLocationTest {
         BiConsumer<Integer, Integer> receiver = Mockito.mock();
 
         // When
-        BoardLocation.getConnected(4, 2, 3, receiver);
+        BoardLocation.getAdjacent(4, 2, 3, receiver);
 
         // Then
         Mockito.verify(receiver).accept(2, 2);
@@ -121,7 +121,7 @@ public class BoardLocationTest {
         BiConsumer<Integer, Integer> receiver = Mockito.mock();
 
         // When
-        BoardLocation.getConnected(4, 2, 2, receiver);
+        BoardLocation.getAdjacent(4, 2, 2, receiver);
 
         // Then
         Mockito.verify(receiver).accept(2, 1);

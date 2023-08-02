@@ -1,5 +1,6 @@
 package uk.co.joesharpcs.gaming.go;
 
+import java.util.Objects;
 import java.util.function.BiConsumer;
 
 public class BoardLocation {
@@ -19,6 +20,19 @@ public class BoardLocation {
         return this.col;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        BoardLocation that = (BoardLocation) o;
+        return row == that.row && col == that.col;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(row, col);
+    }
+
     /**
      * Given a location on a board, passes the location of all valid connected locations.
      * @param boardSize The size of the board
@@ -26,9 +40,9 @@ public class BoardLocation {
      * @param col The column we are assessing
      * @param receiver Receives the connected locations
      */
-    static void getConnected(int boardSize,
-                             int row, int col,
-                             BiConsumer<Integer, Integer> receiver) {
+    static void getAdjacent(int boardSize,
+                            int row, int col,
+                            BiConsumer<Integer, Integer> receiver) {
         if (col > 0) { // left
             receiver.accept(row, col - 1);
         }

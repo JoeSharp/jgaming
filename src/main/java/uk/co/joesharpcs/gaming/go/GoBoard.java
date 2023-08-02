@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class GoBoard {
     private static final int DEFAULT_SIZE = 19;
@@ -15,8 +16,11 @@ public class GoBoard {
     private Player whosTurn;
 
     private final PointValue[][] board;
+    private final PointValue[][] savedBoard;
 
     private final Map<Player, AtomicInteger> captures;
+
+    private final Queue<Integer> lastTwoBoardHashes;
 
     GoBoard() {
         this(DEFAULT_SIZE);
@@ -26,12 +30,17 @@ public class GoBoard {
         this.size = size;
         this.whosTurn = Player.BLACK;
         this.board = new PointValue[this.size][this.size];
+        this.savedBoard = new PointValue[this.size][this.size];
         for (int row=0; row<this.size; row++) {
             for (int col=0; col<this.size; col++) {
                 this.board[row][col] = PointValue.EMPTY;
+                this.savedBoard[row][col] = PointValue.EMPTY;
             }
         }
-        this.captures = Arrays.stream(Player.values()).collect(Collectors.toMap(p -> p, p -> new AtomicInteger(0)));
+        this.captures = Arrays.stream(Player.values())
+                .collect(Collectors.toMap(p -> p, p -> new AtomicInteger(0)));
+        this.lastTwoBoardHashes = new ArrayDeque<>();
+        this.lastTwoBoardHashes.add(Arrays.deepHashCode(this.board));
     }
 
     public int getSize() {
@@ -46,12 +55,29 @@ public class GoBoard {
         return this.captures.get(player).get();
     }
 
+    private void copyBoard(PointValue[][] src, PointValue[][] dest) {
+        for (int row=0; row<size; row++) {
+            for (int col=0; col<size; col++) {
+                dest[row][col] = src[row][col];
+            }
+        }
+    }
+
+    private void saveBoard() {
+        copyBoard(board, savedBoard);
+    }
+    private void restoreBoard() {
+        copyBoard(savedBoard, board);
+    }
+
     public void move(Player player, int row, int col) throws GoException {
+        saveBoard();
+
         if (!this.whosTurn.equals(player)) {
             throw new WrongPlayerException();
         }
 
-        this.validatePoint(row, col);
+        checkPointIsOnBoard(row, col);
 
         if (!PointValue.EMPTY.equals(this.board[row][col])) {
             throw new AlreadyOccupiedException();
@@ -59,43 +85,101 @@ public class GoBoard {
 
         this.board[row][col] = player.getPointValue();
 
-        checkCaptures(player, row, col);
+        boolean capturesMade = checkCaptures(player, row, col);
+
+        // Check for suicidal move
+        if (!capturesMade) {
+            try {
+                checkSuicidalMove(player, row, col);
+            } catch (SuicidalMoveException e) {
+                restoreBoard();
+                throw e;
+            }
+        }
+
+        // Check for Ko
+        if (capturesMade) {
+            try {
+                checkKo();
+            } catch (KoViolationException e) {
+                this.captures.get(player).decrementAndGet();
+                restoreBoard();
+                throw e;
+            }
+        }
 
         this.whosTurn = this.whosTurn.otherPlayer();
     }
-
-    private void checkCaptures(Player player, int row, int col) {
-        BoardLocation.getConnected(size, row, col,
-                (r, c) -> checkCapturedGroup(player, r, c)
-        );
+    private void checkSuicidalMove(Player player, int row, int col) throws SuicidalMoveException {
+        AtomicBoolean libertiesFound = new AtomicBoolean(false);
+        Set<String> dontCheckHereAgain = new HashSet<>();
+        dontCheckHereAgain.add(getLocationKey(row, col));
+        findLiberties(dontCheckHereAgain,
+                player,
+                row, col,
+                (r, c) -> libertiesFound.set(true),
+                (r, c) -> {});
+        if (!libertiesFound.get()) {
+            throw new SuicidalMoveException();
+        }
     }
 
-    private void checkCapturedGroup(Player player, int row, int col) {
+    private void checkKo() throws KoViolationException {
+        int boardHash = Arrays.deepHashCode(board);
+
+        if (lastTwoBoardHashes.stream().anyMatch(b -> b.equals(boardHash))) {
+            throw new KoViolationException();
+        } else {
+            lastTwoBoardHashes.add(boardHash);
+
+            while (lastTwoBoardHashes.size() > 2) {
+                lastTwoBoardHashes.remove();
+            }
+        }
+    }
+
+    private boolean checkCaptures(Player player, int row, int col) {
+        AtomicInteger playerCaptureCount = captures.get(player);
+        AtomicBoolean capturesMade = new AtomicBoolean(false);
+        BoardLocation.getAdjacent(size, row, col,
+                (r, c) -> calculateCaptures(player, r, c).forEach(loc -> {
+                    capturesMade.set(true);
+                    playerCaptureCount.incrementAndGet();
+                    board[loc.getRow()][loc.getCol()] = PointValue.EMPTY;
+                })
+        );
+
+        return capturesMade.get();
+    }
+
+    private Set<BoardLocation> calculateCaptures(Player player, int row, int col) {
         // Are we also occupying this square?
         if (player.getPointValue().equals(board[row][col])) {
-            return;
+            return Collections.emptySet();
         }
 
         // Is the square empty?
         if (PointValue.EMPTY.equals(board[row][col])) {
-            return;
+            return Collections.emptySet();
         }
 
         // It contains the other player, does the other player have any liberties from this spot?
         AtomicBoolean libertyFound = new AtomicBoolean(false);
         Set<BoardLocation> group = new HashSet<>();
+        group.add(new BoardLocation(row, col));
+
         findLiberties(player.otherPlayer(),
                 row, col,
                 (r, c) -> libertyFound.set(true),
-                (r, c) -> group.add(new BoardLocation(r, c)));
+                (r, c) -> group.add(new BoardLocation(r, c))
+        );
 
+        // If the other player does not have any liberties, this group is being captured
         if (!libertyFound.get()) {
-            var playerCaptures = captures.get(player);
-            group.forEach(loc -> {
-                playerCaptures.incrementAndGet();
-                board[loc.getRow()][loc.getCol()] = PointValue.EMPTY;
-            });
+            return group;
         }
+
+        return Collections.emptySet();
     }
 
     public void findLiberties(Player asPlayer,
@@ -105,21 +189,26 @@ public class GoBoard {
         findLiberties(new HashSet<>(), asPlayer, row, col, libertyReceiver, groupReceiver);
     }
 
+    private static String getLocationKey(int row, int col) {
+        return String.format("%d-%d", row, col);
+    }
+
     private void findLiberties(Set<String> alreadyAssessed,
                                Player asPlayer,
                                int row, int col,
                                BiConsumer<Integer, Integer> libertyReceiver,
                                BiConsumer<Integer, Integer> groupReceiver) {
-        BoardLocation.getConnected(size, row, col, (r, c) -> {
+        BoardLocation.getAdjacent(size, row, col, (r, c) -> {
             // Skip it if we've already assessed it
-            String key = String.format("%d-%d", r, c);
+            String key = getLocationKey(r, c);
+            PointValue value = board[r][c];
             if (alreadyAssessed.contains(key)) return;
             alreadyAssessed.add(key);
 
-            if (PointValue.EMPTY.equals(board[r][c])) {
+            if (PointValue.EMPTY.equals(value)) {
                 // Empty..it's a liberty!
                 libertyReceiver.accept(r, c);
-            } else if (asPlayer.getPointValue().equals(board[r][c])) {
+            } else if (asPlayer.getPointValue().equals(value)) {
                 // Have we found more of ourselves?
                 groupReceiver.accept(r, c);
                 findLiberties(alreadyAssessed, asPlayer, r, c, libertyReceiver, groupReceiver);
@@ -127,7 +216,7 @@ public class GoBoard {
         });
     }
 
-    private void validatePoint(int row, int col) throws InvalidPointLocationException {
+    private void checkPointIsOnBoard(int row, int col) throws InvalidPointLocationException {
         if (row < 0 || row >= this.size) throw new InvalidPointLocationException();
         if (col < 0 || col >= this.size) throw new InvalidPointLocationException();
     }
@@ -171,6 +260,8 @@ public class GoBoard {
                 .toList();
 
         final GoBoard board = new GoBoard(rows.size());
+        final Map<Player, AtomicInteger> playerCount = Arrays.stream(Player.values())
+                .collect(Collectors.toMap(p -> p, p -> new AtomicInteger(0)));
 
         for (int rowIndex = 0; rowIndex < board.size; rowIndex++) {
             List<String> cellValues = Arrays.stream(rows.get(rowIndex).split(""))
@@ -189,6 +280,11 @@ public class GoBoard {
                 try {
                     var value = PointValue.fromChar(rawValue);
                     board.board[rowIndex][cellIndex] = value;
+
+                    Player.fromPointValue(value)
+                            .map(playerCount::get)
+                            .ifPresent(AtomicInteger::incrementAndGet);
+
                 } catch (InvalidPointValueException e) {
                     throw new InvalidBoardStateStringException(
                             String.format("Invalid value for row %d, cell: %d, '%s'", rowIndex, cellIndex, rawValue));
@@ -196,11 +292,19 @@ public class GoBoard {
             }
         }
 
+        if (playerCount.get(Player.BLACK).get() > playerCount.get(Player.WHITE).get()) {
+            board.whosTurn = Player.WHITE;
+        } else {
+            board.whosTurn = Player.BLACK;
+        }
+        board.lastTwoBoardHashes.clear();
+        board.lastTwoBoardHashes.add(Arrays.deepHashCode(board.board));
+
         return board;
     }
 
     public PointValue getValue(int row, int col) throws InvalidPointLocationException {
-        this.validatePoint(row, col);
+        this.checkPointIsOnBoard(row, col);
 
         return this.board[row][col];
     }

@@ -1,5 +1,8 @@
 package uk.co.joesharpcs.gaming.go;
 
+import java.util.Arrays;
+import java.util.Optional;
+
 public enum Player {
     WHITE(PointValue.WHITE),
     BLACK(PointValue.BLACK);
@@ -16,5 +19,11 @@ public enum Player {
 
     public Player otherPlayer() {
         return WHITE.equals(this) ? BLACK : WHITE;
+    }
+
+    static Optional<Player> fromPointValue(PointValue pointValue) {
+        return Arrays.stream(values())
+                .filter(p -> pointValue.equals(p.getPointValue()))
+                .findAny();
     }
 }
