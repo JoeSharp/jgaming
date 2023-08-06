@@ -1,6 +1,7 @@
 package uk.co.joesharpcs.gaming.go;
 
 import uk.co.joesharpcs.gaming.go.exceptions.*;
+import uk.co.joesharpcs.gaming.utils.StringUtils;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
