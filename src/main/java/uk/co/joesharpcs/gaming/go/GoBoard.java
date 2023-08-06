@@ -7,9 +7,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class GoBoard {
+
     private static final int DEFAULT_SIZE = 19;
 
     private final int size;
@@ -21,6 +21,10 @@ public class GoBoard {
     private final Map<Player, AtomicInteger> captures;
 
     private final Queue<Integer> lastTwoBoardHashes;
+
+    private boolean isGameUnderway;
+
+    private boolean previousPlayerPassed;
 
     GoBoard() {
         this(DEFAULT_SIZE);
@@ -41,6 +45,8 @@ public class GoBoard {
                 .collect(Collectors.toMap(p -> p, p -> new AtomicInteger(0)));
         this.lastTwoBoardHashes = new ArrayDeque<>();
         this.lastTwoBoardHashes.add(Arrays.deepHashCode(this.board));
+        this.isGameUnderway = true;
+        this.previousPlayerPassed = false;
     }
 
     public int getSize() {
@@ -53,6 +59,11 @@ public class GoBoard {
 
     public Integer getCaptures(Player player) {
         return this.captures.get(player).get();
+    }
+
+    public GoBoard withPreexistingCaptures(Player player, int captures) {
+        this.captures.get(player).set(captures);
+        return this;
     }
 
     private void copyBoard(PointValue[][] src, PointValue[][] dest) {
@@ -70,6 +81,14 @@ public class GoBoard {
         copyBoard(savedBoard, board);
     }
 
+    public void move(int row, int col) throws GoException {
+        move(whosTurn, row, col);
+    }
+
+    public void move(BoardLocation location) throws GoException {
+        move(whosTurn, location.getRow(), location.getCol());
+    }
+
     public void move(Player player, int row, int col) throws GoException {
         saveBoard();
 
@@ -83,6 +102,7 @@ public class GoBoard {
             throw new AlreadyOccupiedException();
         }
 
+        this.previousPlayerPassed = false;
         this.board[row][col] = player.getPointValue();
 
         boolean capturesMade = checkCaptures(player, row, col);
@@ -181,6 +201,10 @@ public class GoBoard {
 
         return Collections.emptySet();
     }
+    public GoBoard withWhosTurn(Player whosTurn) {
+        this.whosTurn = whosTurn;
+        return this;
+    }
 
     public void findLiberties(Player asPlayer,
                               int row, int col,
@@ -228,6 +252,28 @@ public class GoBoard {
         for (var row : board) {
             StringJoiner cellJoiner = new StringJoiner(" ");
             for (var cell : row) {
+                cellJoiner.add(cell.toString());
+            }
+            rowJoiner.add(cellJoiner.toString());
+        }
+
+        return rowJoiner.toString();
+    }
+
+    public String toStringHelpful() {
+        StringJoiner rowJoiner = new StringJoiner("\n");
+
+        StringJoiner headingJoiner = new StringJoiner(" ");
+        headingJoiner.add(".");
+        for (int i=0; i<size; i++) {
+            headingJoiner.add(Integer.toString(i, 10));
+        }
+        rowJoiner.add(headingJoiner.toString());
+
+        for (int i=0; i<size; i++) {
+            StringJoiner cellJoiner = new StringJoiner(" ");
+            cellJoiner.add(Integer.toString(i,10));
+            for (var cell : board[i]) {
                 cellJoiner.add(cell.toString());
             }
             rowJoiner.add(cellJoiner.toString());
@@ -307,5 +353,31 @@ public class GoBoard {
         this.checkPointIsOnBoard(row, col);
 
         return this.board[row][col];
+    }
+
+    public void pass(Player player) throws WrongPlayerException {
+        if (!whosTurn.equals(player)) {
+            throw new WrongPlayerException();
+        }
+
+        if (previousPlayerPassed) {
+            isGameUnderway = false;
+        }
+
+        this.whosTurn = player.otherPlayer();
+        this.captures.get(this.whosTurn).incrementAndGet();
+        this.previousPlayerPassed = true;
+    }
+
+    public void pass() {
+        try {
+            pass(this.whosTurn);
+        } catch (WrongPlayerException e) {
+            throw new RuntimeException("Somehow the wrong player passed when the board decided who it was");
+        }
+    }
+
+    public boolean gameUnderway() {
+        return isGameUnderway;
     }
 }

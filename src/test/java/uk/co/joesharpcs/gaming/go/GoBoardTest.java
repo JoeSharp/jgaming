@@ -93,7 +93,7 @@ class GoBoardTest {
 
         // When
         board.move(Player.BLACK, 4, 5);
-        board.move(Player.WHITE, 4, 6);
+        board.move(4, 6);
         var result = board.getValue(4, 6);
 
         // Then
@@ -292,7 +292,7 @@ class GoBoardTest {
     }
 
     @Test
-    public void koRuleEnforced() throws GoException {
+    public void koRuleEnforcedInMiddle() throws GoException {
         // Given
         var board = GoBoard.fromString("""
                 . . . . . . . . .
@@ -336,6 +336,40 @@ class GoBoardTest {
                 . . . . . . . . .
                 . . . . . . . . .
                 . . . . . . . . .
+                """);
+        assertEquals(afterSecondAttemptedGo, board);
+    }
+
+    @Test
+    public void koRuleEnforcedInCorner() throws GoException {
+        // Given
+        var board = GoBoard.fromString("""
+                . . . .
+                . . . .
+                . . W B
+                . W B .
+                """).withWhosTurn(Player.WHITE);
+
+        // When
+        board.move(Player.WHITE, 3, 3);
+
+        // Then
+        var afterFirstGo = GoBoard.fromString("""
+                . . . .
+                . . . .
+                . . W B
+                . W . W
+                """);
+        assertEquals(afterFirstGo, board);
+        assertEquals(1, board.getCaptures(Player.WHITE));
+
+        assertThrows(KoViolationException.class, () -> board.move(Player.BLACK,3, 2));
+        assertEquals(0, board.getCaptures(Player.BLACK));
+        var afterSecondAttemptedGo = GoBoard.fromString("""
+                . . . .
+                . . . .
+                . . W B
+                . W . W
                 """);
         assertEquals(afterSecondAttemptedGo, board);
     }
@@ -412,7 +446,7 @@ class GoBoardTest {
     }
 
     @Test
-    public void preventSuicidalMoveCorrectly() throws GoException {
+    public void preventSuicidalMoveCorrectlyInMiddle() throws GoException {
         // Given
         var board = GoBoard.fromString( """
                 . . . . . . . . .
@@ -427,6 +461,43 @@ class GoBoardTest {
                 """);
 
         assertThrows(SuicidalMoveException.class, () -> board.move(Player.WHITE, 6, 3));
+    }
+
+    @Test
+    public void preventSuicidalMoveCorrectlyInCorner() throws GoException {
+        // Given
+        var board = GoBoard.fromString( """
+                . . . .
+                . . . .
+                B B . .
+                . B . .
+                """);
+
+        // When, Then
+        assertThrows(SuicidalMoveException.class, () -> board.move(Player.WHITE, 3, 0));
+    }
+
+    @Test
+    public void passingEndsGame() throws GoException {
+        // Given
+        var board = GoBoard.fromString( """
+                . . . .
+                . . . .
+                B B . .
+                . B . .
+                """).withWhosTurn(Player.WHITE)
+                .withPreexistingCaptures(Player.WHITE, 3)
+                .withPreexistingCaptures(Player.BLACK, 4);
+        assertTrue(board.gameUnderway());
+
+        // When
+        board.pass(Player.WHITE);
+        board.pass(); // will use overloaded that uses whosTurn
+
+        // Then
+        assertEquals(4, board.getCaptures(Player.WHITE));
+        assertEquals(5, board.getCaptures(Player.BLACK));
+        assertFalse(board.gameUnderway());
     }
 
     @ParameterizedTest

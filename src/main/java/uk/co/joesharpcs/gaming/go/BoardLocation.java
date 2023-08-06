@@ -33,6 +33,19 @@ public class BoardLocation {
         return Objects.hash(row, col);
     }
 
+    public static BoardLocation fromString(String raw) {
+        String[] parts = raw.split(",");
+
+        if (parts.length != 2) {
+            throw new IllegalArgumentException("Invalid board location: " + raw);
+        }
+
+        int row = Integer.parseInt(parts[0], 10);
+        int col = Integer.parseInt(parts[1], 10);
+
+        return new BoardLocation(row, col);
+    }
+
     /**
      * Given a location on a board, passes the location of all valid connected locations.
      * @param boardSize The size of the board
