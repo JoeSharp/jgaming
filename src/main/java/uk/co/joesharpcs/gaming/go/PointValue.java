@@ -20,7 +20,7 @@ public enum PointValue {
         return this.asChar;
     }
 
-    static PointValue fromChar(String c) throws InvalidPointValueException {
+    static PointValue fromChar(String c) {
         return Arrays.stream(PointValue.values())
                 .filter(v -> Objects.equals(v.asChar, c)).findAny()
                 .orElseThrow(InvalidPointValueException::new);

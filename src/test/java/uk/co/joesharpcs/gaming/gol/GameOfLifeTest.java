@@ -1,0 +1,33 @@
+package uk.co.joesharpcs.gaming.gol;
+
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+class GameOfLifeTest {
+    @Test
+    void initialisesCorrectly() {
+        // Given
+        String boardString = """
+                ..........
+                ..........
+                ..........
+                ..0.......
+                ....0.....
+                0.........
+                ..........
+                ..........
+                ..........
+                ..........
+                """;
+
+        // When
+        GameOfLife gameOfLife = GameOfLife.fromString(boardString);
+
+        // Then
+        assertFalse(gameOfLife.isAlive(3, 3));
+        assertTrue(gameOfLife.isAlive(3, 2));
+        assertTrue(gameOfLife.isAlive(4, 4));
+    }
+}

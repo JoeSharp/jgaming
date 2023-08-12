@@ -1,7 +1,8 @@
 package uk.co.joesharpcs.gaming.go;
 
+import uk.co.joesharpcs.gaming.board.GenericBoard;
+import uk.co.joesharpcs.gaming.board.InvalidBoardStateStringException;
 import uk.co.joesharpcs.gaming.go.exceptions.*;
-import uk.co.joesharpcs.gaming.utils.StringUtils;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -14,10 +15,10 @@ public class GoBoard {
     private static final int DEFAULT_SIZE = 19;
 
     private final int size;
+
     private Player whosTurn;
 
-    private final PointValue[][] board;
-    private final PointValue[][] savedBoard;
+    private final GenericBoard<PointValue> board;
 
     private final Map<Player, AtomicInteger> captures;
 
@@ -31,23 +32,20 @@ public class GoBoard {
         this(DEFAULT_SIZE);
     }
 
-    GoBoard(int size) {
+    GoBoard(int size, GenericBoard<PointValue> board) {
         this.size = size;
         this.whosTurn = Player.BLACK;
-        this.board = new PointValue[this.size][this.size];
-        this.savedBoard = new PointValue[this.size][this.size];
-        for (int row=0; row<this.size; row++) {
-            for (int col=0; col<this.size; col++) {
-                this.board[row][col] = PointValue.EMPTY;
-                this.savedBoard[row][col] = PointValue.EMPTY;
-            }
-        }
+        this.board = board;
         this.captures = Arrays.stream(Player.values())
                 .collect(Collectors.toMap(p -> p, p -> new AtomicInteger(0)));
         this.lastTwoBoardHashes = new ArrayDeque<>();
-        this.lastTwoBoardHashes.add(Arrays.deepHashCode(this.board));
+        this.lastTwoBoardHashes.add(this.board.hashCode());
         this.isGameUnderway = true;
         this.previousPlayerPassed = false;
+    }
+
+    GoBoard(int size) {
+        this(size, new GenericBoard<>(size, PointValue.EMPTY));
     }
 
     public int getSize() {
@@ -67,21 +65,6 @@ public class GoBoard {
         return this;
     }
 
-    private void copyBoard(PointValue[][] src, PointValue[][] dest) {
-        for (int row=0; row<size; row++) {
-            for (int col=0; col<size; col++) {
-                dest[row][col] = src[row][col];
-            }
-        }
-    }
-
-    private void saveBoard() {
-        copyBoard(board, savedBoard);
-    }
-    private void restoreBoard() {
-        copyBoard(savedBoard, board);
-    }
-
     public void move(int row, int col) throws GoException {
         move(whosTurn, row, col);
     }
@@ -91,7 +74,7 @@ public class GoBoard {
     }
 
     public void move(Player player, int row, int col) throws GoException {
-        saveBoard();
+        this.board.save();
 
         if (!this.whosTurn.equals(player)) {
             throw new WrongPlayerException();
@@ -99,12 +82,12 @@ public class GoBoard {
 
         checkPointIsOnBoard(row, col);
 
-        if (!PointValue.EMPTY.equals(this.board[row][col])) {
+        if (!PointValue.EMPTY.equals(this.board.get(row, col))) {
             throw new AlreadyOccupiedException();
         }
 
         this.previousPlayerPassed = false;
-        this.board[row][col] = player.getPointValue();
+        this.board.set(row, col, player.getPointValue());
 
         boolean capturesMade = checkCaptures(player, row, col);
 
@@ -113,7 +96,7 @@ public class GoBoard {
             try {
                 checkSuicidalMove(player, row, col);
             } catch (SuicidalMoveException e) {
-                restoreBoard();
+                board.restore();
                 throw e;
             }
         }
@@ -124,7 +107,7 @@ public class GoBoard {
                 checkKo();
             } catch (KoViolationException e) {
                 this.captures.get(player).decrementAndGet();
-                restoreBoard();
+                board.restore();
                 throw e;
             }
         }
@@ -146,7 +129,7 @@ public class GoBoard {
     }
 
     private void checkKo() throws KoViolationException {
-        int boardHash = Arrays.deepHashCode(board);
+        int boardHash = board.hashCode();
 
         if (lastTwoBoardHashes.stream().anyMatch(b -> b.equals(boardHash))) {
             throw new KoViolationException();
@@ -162,11 +145,11 @@ public class GoBoard {
     private boolean checkCaptures(Player player, int row, int col) {
         AtomicInteger playerCaptureCount = captures.get(player);
         AtomicBoolean capturesMade = new AtomicBoolean(false);
-        BoardLocation.getAdjacent(size, row, col,
+        BoardLocation.getAdjacent(getSize(), row, col,
                 (r, c) -> calculateCaptures(player, r, c).forEach(loc -> {
                     capturesMade.set(true);
                     playerCaptureCount.incrementAndGet();
-                    board[loc.getRow()][loc.getCol()] = PointValue.EMPTY;
+                    board.set(loc.getRow(), loc.getCol(), PointValue.EMPTY);
                 })
         );
 
@@ -175,12 +158,12 @@ public class GoBoard {
 
     private Set<BoardLocation> calculateCaptures(Player player, int row, int col) {
         // Are we also occupying this square?
-        if (player.getPointValue().equals(board[row][col])) {
+        if (player.getPointValue().equals(board.get(row, col))) {
             return Collections.emptySet();
         }
 
         // Is the square empty?
-        if (PointValue.EMPTY.equals(board[row][col])) {
+        if (PointValue.EMPTY.equals(board.get(row, col))) {
             return Collections.emptySet();
         }
 
@@ -223,10 +206,10 @@ public class GoBoard {
                                int row, int col,
                                BiConsumer<Integer, Integer> libertyReceiver,
                                BiConsumer<Integer, Integer> groupReceiver) {
-        BoardLocation.getAdjacent(size, row, col, (r, c) -> {
+        BoardLocation.getAdjacent(getSize(), row, col, (r, c) -> {
             // Skip it if we've already assessed it
             String key = getLocationKey(r, c);
-            PointValue value = board[r][c];
+            PointValue value = board.get(r, c);
             if (alreadyAssessed.contains(key)) return;
             alreadyAssessed.add(key);
 
@@ -242,45 +225,24 @@ public class GoBoard {
     }
 
     private void checkPointIsOnBoard(int row, int col) throws InvalidPointLocationException {
-        if (row < 0 || row >= this.size) throw new InvalidPointLocationException();
-        if (col < 0 || col >= this.size) throw new InvalidPointLocationException();
+        if (row < 0 || row >= this.getSize()) throw new InvalidPointLocationException();
+        if (col < 0 || col >= this.getSize()) throw new InvalidPointLocationException();
     }
 
     @Override
     public String toString() {
-        StringJoiner rowJoiner = new StringJoiner("\n");
-
-        for (var row : board) {
-            StringJoiner cellJoiner = new StringJoiner(" ");
-            for (var cell : row) {
-                cellJoiner.add(cell.toString());
-            }
-            rowJoiner.add(cellJoiner.toString());
-        }
-
-        return rowJoiner.toString();
+        return "GoBoard{" +
+                "\n\twhosTurn=" + whosTurn +
+                "\n\tcaptures=" + captures +
+                "\n\tlastTwoBoardHashes=" + lastTwoBoardHashes +
+                "\n\tisGameUnderway=" + isGameUnderway +
+                "\n\tpreviousPlayerPassed=" + previousPlayerPassed +
+                "\nboard=\n" + board +
+                "}\n";
     }
 
-    public String toStringHelpful() {
-        StringJoiner rowJoiner = new StringJoiner("\n");
-
-        StringJoiner headingJoiner = new StringJoiner(" ");
-        headingJoiner.add(".");
-        for (int i=0; i<size; i++) {
-            headingJoiner.add(Integer.toString(i, 10));
-        }
-        rowJoiner.add(headingJoiner.toString());
-
-        for (int i=0; i<size; i++) {
-            StringJoiner cellJoiner = new StringJoiner(" ");
-            cellJoiner.add(Integer.toString(i,10));
-            for (var cell : board[i]) {
-                cellJoiner.add(cell.toString());
-            }
-            rowJoiner.add(cellJoiner.toString());
-        }
-
-        return rowJoiner.toString();
+    public String toStringBoard() {
+        return board.toString();
     }
 
     @Override
@@ -288,72 +250,44 @@ public class GoBoard {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         GoBoard goBoard = (GoBoard) o;
-        return size == goBoard.size && Arrays.deepEquals(board, goBoard.board);
+        return Objects.equals(board, goBoard.board);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(size, whosTurn);
-        result = 31 * result + Arrays.deepHashCode(board);
-        return result;
+        return board.hashCode();
     }
 
     public static GoBoard fromString(String asString) throws InvalidBoardStateStringException {
+        GenericBoard<PointValue> rawBoard =
+                GenericBoard.fromString(asString, PointValue::fromChar, true);
 
-        List<String> rows = Arrays
-                .stream(asString.split("\n"))
-                .filter(StringUtils::isNotBlank)
-                .map(String::trim)
-                .toList();
+        final GoBoard board = new GoBoard(rawBoard.getNumberRows(), rawBoard);
 
-        final GoBoard board = new GoBoard(rows.size());
-        final Map<Player, AtomicInteger> playerCount = Arrays.stream(Player.values())
-                .collect(Collectors.toMap(p -> p, p -> new AtomicInteger(0)));
+        var pointByValue = rawBoard.getValueCounts();
+        var black = pointByValue
+                .computeIfAbsent(PointValue.BLACK,
+                        (_v) -> new AtomicInteger(0))
+                .get();
+        var white = pointByValue
+                .computeIfAbsent(PointValue.WHITE,
+                        (_v) -> new AtomicInteger(0))
+                .get();
 
-        for (int rowIndex = 0; rowIndex < board.size; rowIndex++) {
-            List<String> cellValues = Arrays.stream(rows.get(rowIndex).split(""))
-                    .map(String::trim)
-                    .filter(StringUtils::isNotBlank)
-                    .toList();
-
-            if (cellValues.size() != board.size) {
-                throw new InvalidBoardStateStringException(
-                        String.format("Incorrect number of columns in row %d", rowIndex));
-            }
-
-            for (int cellIndex=0; cellIndex < board.size; cellIndex++) {
-                var rawValue = cellValues.get(cellIndex);
-
-                try {
-                    var value = PointValue.fromChar(rawValue);
-                    board.board[rowIndex][cellIndex] = value;
-
-                    Player.fromPointValue(value)
-                            .map(playerCount::get)
-                            .ifPresent(AtomicInteger::incrementAndGet);
-
-                } catch (InvalidPointValueException e) {
-                    throw new InvalidBoardStateStringException(
-                            String.format("Invalid value for row %d, cell: %d, '%s'", rowIndex, cellIndex, rawValue));
-                }
-            }
-        }
-
-        if (playerCount.get(Player.BLACK).get() > playerCount.get(Player.WHITE).get()) {
+        if (black > white) {
             board.whosTurn = Player.WHITE;
         } else {
             board.whosTurn = Player.BLACK;
         }
         board.lastTwoBoardHashes.clear();
-        board.lastTwoBoardHashes.add(Arrays.deepHashCode(board.board));
+        board.lastTwoBoardHashes.add(board.hashCode());
 
         return board;
     }
 
-    public PointValue getValue(int row, int col) throws InvalidPointLocationException {
+    public PointValue get(int row, int col) throws InvalidPointLocationException {
         this.checkPointIsOnBoard(row, col);
-
-        return this.board[row][col];
+        return this.board.get(row, col);
     }
 
     public void pass(Player player) throws WrongPlayerException {

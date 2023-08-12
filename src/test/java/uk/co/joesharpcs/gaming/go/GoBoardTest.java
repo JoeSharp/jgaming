@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
+import uk.co.joesharpcs.gaming.board.InvalidBoardStateStringException;
 import uk.co.joesharpcs.gaming.go.exceptions.*;
 
 import java.util.function.BiConsumer;
@@ -36,7 +37,7 @@ class GoBoardTest {
         // Board is empty
         for (int row=0; row < CUSTOM_BOARD_SIZE; row++) {
             for(int col=0; col < CUSTOM_BOARD_SIZE; col++) {
-                var value = board.getValue(row, col);
+                var value = board.get(row, col);
                 assertEquals(PointValue.EMPTY, value);
             }
         }
@@ -60,7 +61,7 @@ class GoBoardTest {
 
         // When
         board.move(Player.BLACK, 4, 5);
-        var result = board.getValue(4, 5);
+        var result = board.get(4, 5);
 
         // Then
         assertEquals(PointValue.BLACK, result);
@@ -72,8 +73,8 @@ class GoBoardTest {
         var board = new GoBoard(4);
 
         // When, Then
-        assertThrows(InvalidPointLocationException.class, () -> board.getValue(4, 1));
-        assertThrows(InvalidPointLocationException.class, () -> board.getValue(1, 4));
+        assertThrows(InvalidPointLocationException.class, () -> board.get(4, 1));
+        assertThrows(InvalidPointLocationException.class, () -> board.get(1, 4));
     }
 
     @Test
@@ -94,7 +95,7 @@ class GoBoardTest {
         // When
         board.move(Player.BLACK, 4, 5);
         board.move(4, 6);
-        var result = board.getValue(4, 6);
+        var result = board.get(4, 6);
 
         // Then
         assertEquals(PointValue.WHITE, result);
@@ -130,14 +131,10 @@ class GoBoardTest {
         var board1 = GoBoard.fromString(boardString);
         var board2 = GoBoard.fromString(boardString);
 
-        // When
-        var result1 = board1.equals(board2);
+        // When, Then
+        assertEquals(board1, board2);
         board1.move(Player.WHITE, 1, 1);
-        var result2 = board1.equals(board2);
-
-        // Then
-        assertTrue(result1);
-        assertFalse(result2);
+        assertNotEquals(board1, board2);
     }
 
     @Test
@@ -156,19 +153,20 @@ class GoBoardTest {
                 """);
 
         // When
-        var result = board.toString();
+        var result = board.toStringBoard();
 
         // Then
         var expected =  """
-                . . . . . . . . .
-                . . . . . . . . .
-                . . . . B B B . .
-                . . . B W . B . .
-                . . . . W W B . .
-                . . . . B B . . .
-                . . . . . . . . .
-                . . . . . . . . .
-                . . . . . . . . .""";
+                . 0 1 2 3 4 5 6 7 8
+                0 . . . . . . . . .
+                1 . . . . . . . . .
+                2 . . . . B B B . .
+                3 . . . B W . B . .
+                4 . . . . W W B . .
+                5 . . . . B B . . .
+                6 . . . . . . . . .
+                7 . . . . . . . . .
+                8 . . . . . . . . .""";
         assertEquals(expected, result);
     }
 
@@ -188,9 +186,9 @@ class GoBoardTest {
                 """);
         
         // When
-        var value24 = board.getValue(2, 4);
-        var value34 = board.getValue(3, 4);
-        var value53 = board.getValue(5, 3);
+        var value24 = board.get(2, 4);
+        var value34 = board.get(3, 4);
+        var value53 = board.get(5, 3);
 
         // Then
         assertEquals(PointValue.BLACK, value24);
@@ -213,9 +211,9 @@ class GoBoardTest {
                 . . . . . . . . .""");
 
         // When
-        var value24 = board.getValue(2, 4);
-        var value34 = board.getValue(3, 4);
-        var value53 = board.getValue(5, 3);
+        var value24 = board.get(2, 4);
+        var value34 = board.get(3, 4);
+        var value53 = board.get(5, 3);
 
         // Then
         assertEquals(PointValue.BLACK, value24);
@@ -500,8 +498,9 @@ class GoBoardTest {
         assertFalse(board.gameUnderway());
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"""
+    @Test
+    public void invalidPointValueDetected() {
+        String input = """
                 .........
                 .........
                 ....BBB..
@@ -511,7 +510,13 @@ class GoBoardTest {
                 .........
                 .........
                 .........
-                """, """
+                """;
+
+        assertThrows(InvalidPointValueException.class, () -> GoBoard.fromString(input));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"""
                 .........
                 ....BBB..
                 ...BW.B..
@@ -531,7 +536,7 @@ class GoBoardTest {
                 ........
                 ........
                 """})
-    public void initialisedByInvalidString(String value) {
+    public void notASquareDetected(String value) {
         // Given
         assertThrows(InvalidBoardStateStringException.class, () -> GoBoard.fromString(value));
     }

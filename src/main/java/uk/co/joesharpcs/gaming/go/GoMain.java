@@ -17,7 +17,7 @@ public class GoMain {
 
         while (board.gameUnderway()) {
             System.out.printf("It's %s turn to move%n", board.getWhosTurn());
-            System.out.println(board.toStringHelpful());
+            System.out.println(board.toStringBoard());
 
             System.out.println("Type in coordinates in form <row>,<col>");
             try {

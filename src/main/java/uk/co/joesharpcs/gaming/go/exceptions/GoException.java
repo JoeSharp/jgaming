@@ -1,6 +1,6 @@
 package uk.co.joesharpcs.gaming.go.exceptions;
 
-public class GoException extends Exception {
+public class GoException extends RuntimeException {
     public GoException() {
         super();
     }
