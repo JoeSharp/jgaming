@@ -1,23 +1,23 @@
 package uk.co.joesharpcs.gaming.board;
 
 import java.util.Objects;
-import java.util.Optional;
+import java.util.Stack;
 
 public class BoardSlot<T> {
+    private Stack<T> history;
     private T currentValue;
-    private T savedValue;
 
     public BoardSlot(T currentValue) {
         this.currentValue = currentValue;
-        this.savedValue = null;
+        this.history = new Stack<>();
     }
 
     public void save() {
-        this.savedValue = this.currentValue;
+        history.push(this.currentValue);
     }
 
     public void restore() {
-        this.currentValue = this.savedValue;
+        this.currentValue = history.pop();
     }
 
     public T get() {

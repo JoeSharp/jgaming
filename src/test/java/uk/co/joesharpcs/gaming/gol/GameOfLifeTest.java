@@ -28,6 +28,6 @@ class GameOfLifeTest {
         // Then
         assertFalse(gameOfLife.isAlive(3, 3));
         assertTrue(gameOfLife.isAlive(3, 2));
-        assertTrue(gameOfLife.isAlive(4, 4));
+        assertTrue(gameOfLife.isAlive(5, 0));
     }
 }
