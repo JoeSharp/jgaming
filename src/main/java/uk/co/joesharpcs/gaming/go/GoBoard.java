@@ -1,7 +1,9 @@
 package uk.co.joesharpcs.gaming.go;
 
+import uk.co.joesharpcs.gaming.board.BoardLocation;
 import uk.co.joesharpcs.gaming.board.GenericBoard;
 import uk.co.joesharpcs.gaming.board.InvalidBoardStateStringException;
+import uk.co.joesharpcs.gaming.board.ShapeConstraint;
 import uk.co.joesharpcs.gaming.go.exceptions.*;
 
 import java.util.*;
@@ -70,7 +72,7 @@ public class GoBoard {
     }
 
     public void move(BoardLocation location) throws GoException {
-        move(whosTurn, location.getRow(), location.getCol());
+        move(whosTurn, location.row(), location.col());
     }
 
     public void move(Player player, int row, int col) throws GoException {
@@ -149,7 +151,7 @@ public class GoBoard {
                 (r, c) -> calculateCaptures(player, r, c).forEach(loc -> {
                     capturesMade.set(true);
                     playerCaptureCount.incrementAndGet();
-                    board.set(loc.getRow(), loc.getCol(), PointValue.EMPTY);
+                    board.set(loc.row(), loc.col(), PointValue.EMPTY);
                 })
         );
 
@@ -260,7 +262,7 @@ public class GoBoard {
 
     public static GoBoard fromString(String asString) throws InvalidBoardStateStringException {
         GenericBoard<PointValue> rawBoard =
-                GenericBoard.fromString(asString, PointValue::fromChar, true);
+                GenericBoard.fromString(asString, PointValue::fromChar, ShapeConstraint.SQUARE);
 
         final GoBoard board = new GoBoard(rawBoard.getNumberRows(), rawBoard);
 

@@ -1,5 +1,7 @@
 package uk.co.joesharpcs.gaming.go;
 
+import uk.co.joesharpcs.gaming.board.BoardLocation;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 

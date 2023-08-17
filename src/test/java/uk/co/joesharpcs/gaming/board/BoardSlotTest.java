@@ -24,6 +24,7 @@ public class BoardSlotTest {
         slot.restore();
 
         assertEquals(7, slot.get());
+        assertEquals(6, slot.getPrevious());
     }
 
     @Test

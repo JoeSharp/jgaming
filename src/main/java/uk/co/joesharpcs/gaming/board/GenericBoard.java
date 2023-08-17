@@ -5,6 +5,8 @@ import uk.co.joesharpcs.gaming.utils.StringUtils;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class GenericBoard<T> {
     private final List<List<BoardSlot<T>>> contents;
@@ -57,6 +59,22 @@ public class GenericBoard<T> {
         return contents.get(row).get(col).get();
     }
 
+    public T getPrevious(int row, int col) {
+        return contents.get(row).get(col).getPrevious();
+    }
+
+    public Stream<BoardLocation> iterateBoardLocations() {
+        Stream.Builder<BoardLocation> builder = Stream.builder();
+
+        for (int row=0; row< contents.size(); row++) {
+            for (int col=0; col<contents.get(row).size(); col++) {
+                builder.accept(new BoardLocation(row, col));
+            }
+        }
+
+        return builder.build();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -94,10 +112,12 @@ public class GenericBoard<T> {
     }
 
     public static <X>GenericBoard<X> fromString(String value, Function<String, X> converter) {
-        return fromString(value, converter, false);
+        return fromString(value, converter, ShapeConstraint.NONE);
     }
 
-    public static <X>GenericBoard<X> fromString(String value, Function<String, X> converter, boolean squareRequired) {
+    public static <X>GenericBoard<X> fromString(String value,
+                                                Function<String, X> converter,
+                                                ShapeConstraint shapeConstraint) {
         List<List<X>> contents = Arrays
                 .stream(value.split("\n"))
                 .filter(StringUtils::isNotBlank)
@@ -109,22 +129,10 @@ public class GenericBoard<T> {
                         .toList())
                 .toList();
 
-        if (squareRequired && !isSquare(contents)) {
+        if (!shapeConstraint.validate(contents)) {
             throw new InvalidBoardStateStringException("Board should be a square");
         }
 
         return new GenericBoard<>(contents);
-    }
-
-    private static <X> boolean isSquare(List<List<X>> contents) {
-        int size = contents.size();
-
-        for (var row : contents) {
-            if (row.size() != size) {
-                return false;
-            }
-        }
-
-        return true;
     }
 }

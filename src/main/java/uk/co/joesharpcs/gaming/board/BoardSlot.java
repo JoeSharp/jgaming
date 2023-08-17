@@ -24,6 +24,10 @@ public class BoardSlot<T> {
         return this.currentValue;
     }
 
+    public T getPrevious() {
+        return this.history.peek();
+    }
+
     public void set(T value) {
         this.currentValue = value;
     }
