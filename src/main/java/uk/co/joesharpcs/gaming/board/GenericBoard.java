@@ -9,21 +9,38 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class GenericBoard<T> {
-    private final List<List<BoardSlot<T>>> contents;
+    private final List<List<T>> contents;
+    private final List<List<T>> previousContents;
 
     public GenericBoard(List<List<T>> contents) {
-        this.contents = contents.stream().map(row -> row.stream().map(BoardSlot::new).toList()).toList();
+        this.contents = new ArrayList<>();
+        this.previousContents = new ArrayList<>();
+
+        for (List<T> sourceRow : contents) {
+            var row = new ArrayList<T>();
+            var prevRow = new ArrayList<T>();
+            for (T t : sourceRow) {
+                row.add(t);
+                prevRow.add(t);
+            }
+            this.contents.add(row);
+            this.previousContents.add(prevRow);
+        }
     }
 
     public GenericBoard(int dimension, T emptyValue) {
         this.contents = new ArrayList<>();
+        this.previousContents = new ArrayList<>();
 
         for (int i=0; i<dimension; i++) {
-            var row = new ArrayList<BoardSlot<T>>();
+            var row = new ArrayList<T>();
+            var prevRow = new ArrayList<T>();
             for (int j=0; j<dimension; j++) {
-                row.add(new BoardSlot<>(emptyValue));
+                row.add(emptyValue);
+                prevRow.add(emptyValue);
             }
             this.contents.add(row);
+            this.previousContents.add(prevRow);
         }
     }
 
@@ -35,7 +52,7 @@ public class GenericBoard<T> {
         Map<T, AtomicInteger> counts = new HashMap<>();
 
         this.contents.forEach(row -> row.forEach(v ->
-            counts.computeIfAbsent(v.get(),
+            counts.computeIfAbsent(v,
                     (_v) -> new AtomicInteger(0))
                     .incrementAndGet()
         ));
@@ -43,24 +60,35 @@ public class GenericBoard<T> {
         return counts;
     }
 
+    private static <T> void copyContents(List<List<T>> source, List<List<T>> destination) {
+        for (int row=0; row<source.size(); row++) {
+            var srcRow = source.get(row);
+            var destRow = destination.get(row);
+
+            for (int col=0; col<srcRow.size(); col++) {
+                destRow.set(col, srcRow.get(col));
+            }
+        }
+    }
+
     public void restore() {
-        contents.forEach(row -> row.forEach(BoardSlot::restore));
+        copyContents(previousContents, contents);
     }
 
     public void save() {
-        contents.forEach(row -> row.forEach(BoardSlot::save));
+        copyContents(contents, previousContents);;
     }
 
     public void set(int row, int col, T value) {
-        contents.get(row).get(col).set(value);
+        contents.get(row).set(col, value);
     }
 
     public T get(int row, int col) {
-        return contents.get(row).get(col).get();
+        return contents.get(row).get(col);
     }
 
     public T getPrevious(int row, int col) {
-        return contents.get(row).get(col).getPrevious();
+        return previousContents.get(row).get(col);
     }
 
     public Stream<BoardLocation> iterateBoardLocations() {
