@@ -2,6 +2,8 @@ plugins {
     id 'java'
     id 'jacoco'
     id 'jacoco-report-aggregation'
+    id "io.freefair.lombok" version "8.6"
+    id "com.diffplug.spotless" version "6.25.0"
 }
 
 group 'org.example'
@@ -16,6 +18,7 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.9.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
     testImplementation 'org.mockito:mockito-core:5.3.1'
+    testImplementation 'org.hamcrest:hamcrest-library:2.2'
 }
 
 test {
@@ -25,3 +28,19 @@ test {
 jacocoTestReport {
     dependsOn test // tests are required to run before generating the report
 }
+spotless {
+    java {
+        // Use the default importOrder configuration
+        importOrder()
+        removeUnusedImports()
+
+        // Cleanthat will refactor your code, but it may break your style: apply it before your formatter
+        cleanthat()          // has its own section below
+
+        // Choose one of these formatters.
+        googleJavaFormat()
+    }
+}
+
+tasks.test.dependsOn(tasks.spotlessApply)
+tasks.build.dependsOn(tasks.spotlessApply)
