@@ -5,8 +5,17 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Getter
-public class MonopolyPlayer {
+public class Player {
+
+  public enum PlayerPiece {
+    PENGUIN,
+    DINOSAUR,
+    CAR,
+    DOG,
+    CAT,
+    BIRD
+  }
 
   private final String name;
-  private final MonopolyPiece piece;
+  private final PlayerPiece piece;
 }

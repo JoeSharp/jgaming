@@ -1,4 +1,4 @@
-package uk.co.joesharpcs.gaming.monopoly;
+package uk.co.joesharpcs.gaming.utils;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;

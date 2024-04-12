@@ -3,30 +3,35 @@ package uk.co.joesharpcs.gaming.monopoly;
 import java.util.ArrayList;
 import java.util.List;
 import uk.co.joesharpcs.gaming.chance.Dice;
+import uk.co.joesharpcs.gaming.utils.CircularQueueIterator;
 import uk.co.joesharpcs.gaming.utils.GameRulesException;
 
-public class MonopolyGame {
-  private final MonopolyBoard board;
+public class Game {
+  private final Board board;
   private final Dice die;
-  private final List<MonopolyPlayer> players;
-  private final CircularQueueIterator<MonopolyPlayer> playerTurns;
+  private final List<Player> players;
+  private final CircularQueueIterator<Player> playerTurns;
   private GameState state;
 
-  public MonopolyGame() {
+  public Game() {
     this.state = GameState.INITIALISING;
     this.players = new ArrayList<>();
-    this.board = new MonopolyBoard();
+    this.board = new Board();
     this.die = Dice.sixSided();
     this.playerTurns = new CircularQueueIterator<>(players);
   }
 
-  public MonopolyGame withPlayer(MonopolyPlayer player) throws GameRulesException {
+  public Game withPlayer(Player player) throws GameRulesException {
     checkState(GameState.INITIALISING);
+    if (this.players.stream().map(Player::getName).anyMatch(p -> p.equals(player.getName()))) {
+      throw new GameRulesException(
+          String.format("All player names must be unique, %s already exists", player.getName()));
+    }
     this.players.add(player);
     return this;
   }
 
-  public MonopolyGame readyToPlay() throws GameRulesException {
+  public Game readyToPlay() throws GameRulesException {
     checkState(GameState.INITIALISING);
     this.state = GameState.PLAYING;
     return this;

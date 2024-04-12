@@ -1,4 +1,4 @@
-package uk.co.joesharpcs.gaming.monopoly;
+package uk.co.joesharpcs.gaming.utils;
 
 import java.util.List;
 import java.util.function.Predicate;
