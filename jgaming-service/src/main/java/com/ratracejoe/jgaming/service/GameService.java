@@ -3,6 +3,7 @@ package com.ratracejoe.jgaming.service;
 import com.ratracejoe.jgaming.exception.CreatedByDuplicateException;
 import com.ratracejoe.jgaming.exception.GameNotFoundException;
 import com.ratracejoe.jgaming.model.Game;
+import com.ratracejoe.jgaming.model.GameType;
 import com.ratracejoe.jgaming.redis.GameRepository;
 import java.util.Collections;
 import java.util.List;
@@ -17,7 +18,7 @@ public class GameService implements IGameService {
   private final GameRepository gameRepository;
 
   @Override
-  public Game createGame(String createdBy, String gameType, String description)
+  public Game createGame(String createdBy, GameType gameType, String description)
       throws CreatedByDuplicateException {
     var existingGame = getGameCreatedBy(createdBy);
     if (existingGame.isPresent()) {
@@ -46,7 +47,7 @@ public class GameService implements IGameService {
   }
 
   @Override
-  public List<Game> getGamesByType(String gameType) {
+  public List<Game> getGamesByType(GameType gameType) {
     return gameRepository.findAllWithPredicate(g -> gameType.equals(g.gameType()));
   }
 

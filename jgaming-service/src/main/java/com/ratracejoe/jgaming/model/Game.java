@@ -6,4 +6,4 @@ import org.springframework.data.redis.core.RedisHash;
 
 @RedisHash("game")
 public record Game(
-    UUID id, String createdBy, String gameType, String userDescription, List<String> players) {}
+    UUID id, String createdBy, GameType gameType, String userDescription, List<String> players) {}

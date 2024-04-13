@@ -7,6 +7,7 @@ import com.ratracejoe.jgaming.AbstractTest;
 import com.ratracejoe.jgaming.exception.CreatedByDuplicateException;
 import com.ratracejoe.jgaming.exception.GameNotFoundException;
 import com.ratracejoe.jgaming.model.Game;
+import com.ratracejoe.jgaming.model.GameType;
 import java.util.List;
 import java.util.UUID;
 import org.assertj.core.api.Condition;
@@ -20,7 +21,7 @@ class GameServiceTest extends AbstractTest {
   void createAndGetGame() throws GameNotFoundException, CreatedByDuplicateException {
     // Given
     String createdBy = randomValue("user");
-    String gameType = "chess";
+    GameType gameType = GameType.GO_FISH;
     String userDescription = "created by bots";
 
     // When
@@ -38,7 +39,7 @@ class GameServiceTest extends AbstractTest {
   void deleteGame() throws CreatedByDuplicateException {
     // Given
     String createdBy = randomValue("user");
-    String gameType = "chess";
+    GameType gameType = GameType.GO_FISH;
     String userDescription = "created by bots";
     Game created = gameService.createGame(createdBy, gameType, userDescription);
 
@@ -59,16 +60,16 @@ class GameServiceTest extends AbstractTest {
   void onlyOneGamePerCreator() throws CreatedByDuplicateException {
     // Given
     String createdBy = randomValue("user");
-    String gameType1 = "chess";
+    GameType gameType1 = GameType.GAME_OF_LIFE;
     String userDescription1 = "first game";
-    String gameType2 = "go";
+    GameType gameType2 = GameType.GO_FISH;
     String userDescription2 = "second game should fail";
     gameService.createGame(createdBy, gameType1, userDescription1);
 
     // When, Then
     assertThatThrownBy(() -> gameService.createGame(createdBy, gameType2, userDescription2))
         .isInstanceOf(CreatedByDuplicateException.class)
-        .hasMessage("A game of type chess has already been created by " + createdBy);
+        .hasMessage("A game of type GAME_OF_LIFE has already been created by " + createdBy);
   }
 
   private static String randomValue(String prefix) {

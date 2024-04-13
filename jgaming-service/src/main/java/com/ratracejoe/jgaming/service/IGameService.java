@@ -3,13 +3,14 @@ package com.ratracejoe.jgaming.service;
 import com.ratracejoe.jgaming.exception.CreatedByDuplicateException;
 import com.ratracejoe.jgaming.exception.GameNotFoundException;
 import com.ratracejoe.jgaming.model.Game;
+import com.ratracejoe.jgaming.model.GameType;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface IGameService {
 
-  Game createGame(String createdBy, String gameType, String description)
+  Game createGame(String createdBy, GameType gameType, String description)
       throws CreatedByDuplicateException;
 
   Game addPlayer(UUID id, String playerName) throws GameNotFoundException;
@@ -18,7 +19,7 @@ public interface IGameService {
 
   void deleteGame(UUID id);
 
-  List<Game> getGamesByType(String gameType);
+  List<Game> getGamesByType(GameType gameType);
 
   Optional<Game> getGameCreatedBy(String createdBy);
 }
