@@ -23,6 +23,9 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation "org.testcontainers:testcontainers:1.19.7"
+	testImplementation 'org.testcontainers:junit-jupiter:1.17.6'
+	testImplementation 'com.redis.testcontainers:testcontainers-redis-junit-jupiter:1.4.6'
 }
 
 tasks.named('test') {
@@ -33,3 +36,5 @@ spotless {
 		googleJavaFormat()
 	}
 }
+
+tasks.compileJava.finalizedBy(tasks.spotlessApply)
