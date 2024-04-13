@@ -9,6 +9,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
@@ -37,6 +38,14 @@ public class GameController {
   public Game addPlayer(@PathVariable("id") UUID id, @RequestBody String playerName)
       throws GameNotFoundException {
     return gameService.addPlayer(id, playerName);
+  }
+
+  @GetMapping("/createdBy/{createdBy}")
+  public ResponseEntity<Game> getGameCreatedBy(@PathVariable("createdBy") String createdBy) {
+    return gameService
+        .getGameCreatedBy(createdBy)
+        .map(ResponseEntity::ok)
+        .orElseGet(() -> ResponseEntity.noContent().build());
   }
 
   @GetMapping("/{id}")
