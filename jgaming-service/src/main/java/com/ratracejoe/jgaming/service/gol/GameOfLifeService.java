@@ -1,37 +1,61 @@
 package com.ratracejoe.jgaming.service.gol;
 
 import com.ratracejoe.jgaming.exception.GameNotFoundException;
-import com.ratracejoe.jgaming.model.GameType;
+import com.ratracejoe.jgaming.exception.InvalidGameParameters;
+import com.ratracejoe.jgaming.model.IdentifiedGameOfLife;
 import com.ratracejoe.jgaming.model.StoredGameOfLife;
 import com.ratracejoe.jgaming.redis.GameOfLifeRepository;
+import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import uk.co.joesharpcs.gaming.gol.GameOfLife;
+import uk.co.joesharpcs.gaming.gol.GolPatterns;
 
 @RequiredArgsConstructor
 @Service
 public class GameOfLifeService implements IGameOfLifeService {
+
   private final GameOfLifeRepository repository;
 
   @Override
-  public GameType getGameType() {
-    return GameType.GAME_OF_LIFE;
+  public IdentifiedGameOfLife create() {
+    return createWithBoard(GolPatterns.BEACON);
   }
 
   @Override
-  public void create(UUID id) {
-    GameOfLife newGame = new GameOfLife();
-    StoredGameOfLife stored = new StoredGameOfLife(id, newGame);
-    repository.save(stored);
+  public IdentifiedGameOfLife create(String namedPattern) throws InvalidGameParameters {
+    String board = GolPatterns.NAMED_PATTERNS.get(namedPattern);
+    if (Objects.isNull(board)) {
+      throw new InvalidGameParameters(
+          String.format("Pattern named %s does not exist", namedPattern));
+    }
+
+    return createWithBoard(board);
+  }
+
+  private IdentifiedGameOfLife createWithBoard(String board) {
+    UUID id = UUID.randomUUID();
+    GameOfLife newGame = GameOfLife.fromString(board);
+    StoredGameOfLife stored = new StoredGameOfLife(id, newGame.toString());
+    stored = repository.save(stored);
+    return GameOfLifeRepository.read(stored);
   }
 
   @Override
-  public void iterate(UUID id) throws GameNotFoundException {
-    StoredGameOfLife stored = repository.findById(id)
-            .orElseThrow(() -> new GameNotFoundException(id));
+  public IdentifiedGameOfLife get(UUID id) throws GameNotFoundException {
+    return repository
+        .findById(id)
+        .map(GameOfLifeRepository::read)
+        .orElseThrow(() -> new GameNotFoundException(id));
+  }
+
+  @Override
+  public IdentifiedGameOfLife iterate(UUID id) throws GameNotFoundException {
+    IdentifiedGameOfLife stored = this.get(id);
     stored.game().iterate();
-    repository.save(stored);
+    repository.save(GameOfLifeRepository.write(stored));
+    return stored;
   }
 
   @Override

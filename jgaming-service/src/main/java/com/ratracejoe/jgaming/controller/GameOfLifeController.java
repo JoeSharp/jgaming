@@ -1,21 +1,43 @@
 package com.ratracejoe.jgaming.controller;
 
+import com.ratracejoe.jgaming.exception.GameNotFoundException;
+import com.ratracejoe.jgaming.exception.InvalidGameParameters;
+import com.ratracejoe.jgaming.model.IdentifiedGameOfLife;
 import com.ratracejoe.jgaming.service.gol.IGameOfLifeService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequestMapping("/gol")
 @RequiredArgsConstructor
 public class GameOfLifeController {
 
-    private final IGameOfLifeService service;
+  private final IGameOfLifeService service;
 
-    @PostMapping("/iterate/{id}")
-    public void iterate(@PathVariable("id") UUID id) {
-        service.iterate(id);
-    }
+  @PostMapping("/create")
+  public IdentifiedGameOfLife create() {
+    return service.create();
+  }
+
+  @PostMapping("/create/{name}")
+  public IdentifiedGameOfLife create(@PathVariable("name") String namedPattern)
+      throws InvalidGameParameters {
+    return service.create(namedPattern);
+  }
+
+  @PostMapping("/iterate/{id}")
+  public IdentifiedGameOfLife iterate(@PathVariable("id") UUID id) throws GameNotFoundException {
+    return service.iterate(id);
+  }
+
+  @GetMapping("/{id}")
+  public IdentifiedGameOfLife get(@PathVariable("id") UUID id) throws GameNotFoundException {
+    return service.get(id);
+  }
+
+  @DeleteMapping("/{id}")
+  public void destroy(@PathVariable("id") UUID id) {
+    service.destroy(id);
+  }
 }

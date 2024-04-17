@@ -119,8 +119,19 @@ public class GridBoard<T> {
     return Objects.hash(contents);
   }
 
-  @Override
-  public String toString() {
+  public String toString(Function<T, String> converter) {
+    StringJoiner rowJoiner = new StringJoiner("\n");
+
+    for (List<T> content : contents) {
+      StringJoiner cellJoiner = new StringJoiner("");
+      content.stream().map(converter).forEach(cellJoiner::add);
+      rowJoiner.add(cellJoiner.toString());
+    }
+
+    return rowJoiner.toString();
+  }
+
+  public String toPrintableString(Function<T, String> converter) {
     StringJoiner rowJoiner = new StringJoiner("\n");
 
     StringJoiner headingJoiner = new StringJoiner(" ");
@@ -133,7 +144,7 @@ public class GridBoard<T> {
     for (int i = 0; i < contents.size(); i++) {
       StringJoiner cellJoiner = new StringJoiner(" ");
       cellJoiner.add(Integer.toString(i, 10));
-      contents.get(i).stream().map(Object::toString).forEach(cellJoiner::add);
+      contents.get(i).stream().map(converter).forEach(cellJoiner::add);
       rowJoiner.add(cellJoiner.toString());
     }
 

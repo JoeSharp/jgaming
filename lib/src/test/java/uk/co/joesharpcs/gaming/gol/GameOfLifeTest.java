@@ -1,7 +1,6 @@
 package uk.co.joesharpcs.gaming.gol;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -53,7 +52,7 @@ class GameOfLifeTest {
                 ...
                 """
       })
-  public void solitude(String boardString) {
+  void solitude(String boardString) {
     // When
     GameOfLife gameOfLife = GameOfLife.fromString(boardString);
     gameOfLife.iterate();
@@ -86,7 +85,7 @@ class GameOfLifeTest {
                 0.0
                 """
       })
-  public void overpopulation(String boardString) {
+  void overpopulation(String boardString) {
     // When
     GameOfLife gameOfLife = GameOfLife.fromString(boardString);
     gameOfLife.iterate();
@@ -124,7 +123,7 @@ class GameOfLifeTest {
                 ..0
                 """
       })
-  public void survives(String boardString) {
+  void survives(String boardString) {
     // When
     GameOfLife gameOfLife = GameOfLife.fromString(boardString);
     gameOfLife.iterate();
@@ -157,12 +156,27 @@ class GameOfLifeTest {
                 00.
                 """
       })
-  public void birth(String boardString) {
+  void birth(String boardString) {
     // When
     GameOfLife gameOfLife = GameOfLife.fromString(boardString);
     gameOfLife.iterate();
 
     // Then
     assertTrue(gameOfLife.isAlive(1, 1));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {GolPatterns.BEACON, GolPatterns.BLINKER})
+  void oscillators(String pattern) {
+    // Given
+    GameOfLife gameOfLife = GameOfLife.fromString(pattern);
+
+    // When
+    for (int i = 0; i < 10; i++) {
+      gameOfLife.iterate();
+    }
+
+    // Then
+    assertEquals(pattern.trim(), gameOfLife.toString().trim());
   }
 }

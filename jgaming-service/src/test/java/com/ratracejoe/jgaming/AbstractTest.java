@@ -1,7 +1,9 @@
 package com.ratracejoe.jgaming;
 
 import com.redis.testcontainers.RedisContainer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.utility.DockerImageName;
@@ -19,6 +21,8 @@ public abstract class AbstractTest {
   static {
     REDIS_CONTAINER.start();
   }
+
+  @Autowired protected TestRestTemplate restTemplate;
 
   @DynamicPropertySource
   static void dynamicProperties(DynamicPropertyRegistry registry) {

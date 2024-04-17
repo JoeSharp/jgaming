@@ -56,5 +56,4 @@ spotless {
     }
 }
 
-tasks.test.dependsOn(tasks.spotlessApply)
-tasks.build.dependsOn(tasks.spotlessApply)
+tasks.compileJava.finalizedBy(tasks.spotlessApply)

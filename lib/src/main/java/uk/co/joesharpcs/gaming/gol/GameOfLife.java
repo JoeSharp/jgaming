@@ -60,6 +60,15 @@ public class GameOfLife {
     return this.board.get(row, col);
   }
 
+  @Override
+  public String toString() {
+    return board.toString(GameOfLife::cellToString);
+  }
+
+  public String toPrintableString() {
+    return board.toPrintableString(GameOfLife::cellToString);
+  }
+
   public static GameOfLife fromString(final String value) {
     final GridBoard<Boolean> board = GridBoard.fromString(value, GameOfLife::cellFromString);
 
@@ -72,5 +81,9 @@ public class GameOfLife {
       case DEAD_CELL -> false;
       default -> null;
     };
+  }
+
+  private static String cellToString(Boolean value) {
+    return Boolean.TRUE.equals(value) ? ALIVE_CELL : DEAD_CELL;
   }
 }
