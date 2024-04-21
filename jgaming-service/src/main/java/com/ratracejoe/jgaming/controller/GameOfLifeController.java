@@ -6,6 +6,7 @@ import com.ratracejoe.jgaming.model.IdentifiedGameOfLife;
 import com.ratracejoe.jgaming.service.gol.IGameOfLifeService;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,11 +16,13 @@ public class GameOfLifeController {
 
   private final IGameOfLifeService service;
 
+  @ResponseStatus(HttpStatus.CREATED)
   @PostMapping("/create")
   public IdentifiedGameOfLife create() {
     return service.create();
   }
 
+  @ResponseStatus(HttpStatus.CREATED)
   @PostMapping("/create/{name}")
   public IdentifiedGameOfLife create(@PathVariable("name") String namedPattern)
       throws InvalidGameParameters {

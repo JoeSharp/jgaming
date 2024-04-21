@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import lombok.Getter;
 import uk.co.joesharpcs.gaming.utils.StringUtils;
 
 /**
@@ -11,9 +12,15 @@ import uk.co.joesharpcs.gaming.utils.StringUtils;
  *
  * @param <T> The type of data stored in each cell of the grid.
  */
+@Getter
 public class GridBoard<T> {
   private final List<List<T>> contents;
   private final List<List<T>> previousContents;
+
+  public GridBoard() {
+    contents = new ArrayList<>();
+    previousContents = new ArrayList<>();
+  }
 
   public GridBoard(List<List<T>> contents) {
     this.contents = new ArrayList<>();
@@ -79,7 +86,6 @@ public class GridBoard<T> {
 
   public void save() {
     copyContents(contents, previousContents);
-    ;
   }
 
   public void set(int row, int col, T value) {

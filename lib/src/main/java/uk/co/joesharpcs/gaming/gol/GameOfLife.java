@@ -1,9 +1,11 @@
 package uk.co.joesharpcs.gaming.gol;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import lombok.Getter;
 import uk.co.joesharpcs.gaming.board.BoardLocation;
 import uk.co.joesharpcs.gaming.board.GridBoard;
 
+@Getter
 public class GameOfLife {
   public static final String DEAD_CELL = ".";
   public static final String ALIVE_CELL = "0";
