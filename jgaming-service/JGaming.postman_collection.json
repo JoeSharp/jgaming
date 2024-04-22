@@ -1,0 +1,161 @@
+{
+	"info": {
+		"_postman_id": "3233450f-4fd8-480a-b6bd-41a1ac915de2",
+		"name": "JGaming",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "3038073"
+	},
+	"item": [
+		{
+			"name": "Game of Life",
+			"item": [
+				{
+					"name": "Create",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let jsonData = pm.response.json();",
+									"",
+									"pm.globals.set('gol-uuid', jsonData.id)"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{service-host}}/gol/create",
+							"host": [
+								"{{service-host}}"
+							],
+							"path": [
+								"gol",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Named",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Game has UUID\", function () {",
+									"    let jsonData = pm.response.json();",
+									"    pm.globals.set('gol-uuid', jsonData.id)",
+									"});",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{service-host}}/gol/create/boat",
+							"host": [
+								"{{service-host}}"
+							],
+							"path": [
+								"gol",
+								"create",
+								"boat"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Iterate",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{service-host}}/gol/iterate/{{gol-uuid}}",
+							"host": [
+								"{{service-host}}"
+							],
+							"path": [
+								"gol",
+								"iterate",
+								"{{gol-uuid}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{service-host}}/gol/{{gol-uuid}}",
+							"host": [
+								"{{service-host}}"
+							],
+							"path": [
+								"gol",
+								"{{gol-uuid}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{service-host}}/gol/{{gol-uuid}}",
+							"host": [
+								"{{service-host}}"
+							],
+							"path": [
+								"gol",
+								"{{gol-uuid}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "API Meta",
+			"item": [
+				{
+					"name": "Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{service-host}}/actuator/health",
+							"host": [
+								"{{service-host}}"
+							],
+							"path": [
+								"actuator",
+								"health"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
