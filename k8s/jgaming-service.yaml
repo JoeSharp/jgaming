@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jgaming-deployment
+  labels:
+    app: jgaming
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: jgaming
+  template:
+    metadata:
+      labels:
+        app: jgaming
+    spec:
+      containers:
+      - name: jgaming-service
+        image: docker.io/joesharpcs/jgaming-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        env:
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: redis-config          
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: redis-config          
+              key: REDIS_PORT
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jgaming-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: jgaming
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+      nodePort: 30000
