@@ -18,6 +18,7 @@ build-ui: minikube
 deploy: build-service build-ui
 	echo "Applying Components"
 	kubectl apply -f gol-namespace.yaml
+	kubens gol
 	kubectl apply -f redis.yaml
 	kubectl apply -f redis-config.yaml
 	kubectl apply -f jgaming-service.yaml
@@ -30,3 +31,4 @@ clean:
 	kubectl delete -f redis-config.yaml
 	kubectl delete -f redis.yaml
 	kubectl delete -f gol-namespace.yaml
+	kubens default
