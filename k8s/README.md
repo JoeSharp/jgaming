@@ -6,3 +6,9 @@ eval $(minikube -p minikube docker-env)
 ```
 
 Build the local docker image in the same terminal
+
+List the locally built images
+```bash
+minikube image ls --format table
+```
+

@@ -1,11 +1,12 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: jgaming-deployment
+  name: jgaming
+  namespace: gol
   labels:
     app: jgaming
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: jgaming
@@ -15,7 +16,7 @@ spec:
         app: jgaming
     spec:
       containers:
-      - name: jgaming-service
+      - name: jgaming
         image: docker.io/joesharpcs/jgaming-service:latest
         imagePullPolicy: IfNotPresent
         ports:
@@ -24,18 +25,18 @@ spec:
         - name: REDIS_HOST
           valueFrom:
             configMapKeyRef:
-              name: redis-config          
+              name: redis
               key: REDIS_HOST
         - name: REDIS_PORT
           valueFrom:
             configMapKeyRef:
-              name: redis-config          
+              name: redis
               key: REDIS_PORT
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: jgaming-service
+  name: jgaming
 spec:
   type: LoadBalancer
   selector:

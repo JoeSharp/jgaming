@@ -1,7 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: redis-deployment
+  name: redis
+  namespace: gol
   labels:
     app: redis
 spec:
@@ -23,7 +24,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: redis-service
+  name: redis
 spec:
   selector:
     app: redis
