@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jgaming-ui
+  namespace: gol
+  labels:
+    app: jgaming-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jgaming-ui
+  template:
+    metadata:
+      labels:
+        app: jgaming-ui
+    spec:
+      containers:
+      - name: jgaming-ui
+        image: docker.io/joesharpcs/jgaming-ui:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jgaming-ui
+spec:
+  type: LoadBalancer
+  selector:
+    app: jgaming-ui
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+      nodePort: 30000
