@@ -1,7 +1,3 @@
-minikube:
-	eval $(minikube -p minikube docker-env)
-	minikube image ls --format table
-
 build-service: minikube
 	echo "Building the Service" && \
 	pushd ../jgaming-service && \

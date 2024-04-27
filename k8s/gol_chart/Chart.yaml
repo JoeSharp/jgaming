@@ -1,0 +1,6 @@
+apiVersion: v2
+name: gameOfLife
+description: The Game of Life Service
+type: application
+version: 0.1.0
+appVersion: "1.16.0"

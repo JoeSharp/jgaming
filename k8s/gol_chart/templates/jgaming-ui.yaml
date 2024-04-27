@@ -20,7 +20,7 @@ spec:
         image: docker.io/joesharpcs/jgaming-ui:latest
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 80
+        - containerPort: 8080
 ---
 apiVersion: v1
 kind: Service
@@ -28,10 +28,11 @@ metadata:
   name: jgaming-ui
   namespace: gol
 spec:
+  type: LoadBalancer
   selector:
     app: jgaming-ui
-  type: LoadBalancer
   ports:
     - protocol: TCP
-      port: 80
-      targetPort: 9080
+      port: 8080
+      targetPort: 8080
+      nodePort: 30000

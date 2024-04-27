@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jgaming-ingress
+  namespace: gol
+spec:
+  rules:
+  - host: joesharpcs.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: jgaming-ui
+            port:
+              number: 80
+---
+

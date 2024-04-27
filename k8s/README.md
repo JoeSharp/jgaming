@@ -12,3 +12,5 @@ List the locally built images
 minikube image ls --format table
 ```
 
+# Minikube Config
+minikube addons enable ingress
