@@ -7,4 +7,5 @@ build-api:
 
 build-ui: 
 	echo "Building the UI" 
+	npm run build --prefix ../ui/
 	docker build --platform=linux/amd64 -t joesharpcs/jgaming-ui ../ui/

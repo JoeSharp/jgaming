@@ -9,6 +9,7 @@ const NewGameOfLife: FC<Props> = ({createGame}) => {
   const onNameChange: ChangeEventHandler<HTMLInputElement> = useCallback(({target:{value}}) => {
     setName(value);
   }, []);
+
   return (
     <>
       <button onClick={() => createGame(name)}>Create Game</button>

@@ -9,7 +9,7 @@ interface Props {
 }
 
 const GameOfLifeComponent: React.FC<Props> = ({game, deleteGame}) => {
-  return <div>
+  return (<div>
     <button onClick={deleteGame}>Delete Game</button>
     <table className='gol'>
       <tbody>
@@ -18,7 +18,7 @@ const GameOfLifeComponent: React.FC<Props> = ({game, deleteGame}) => {
         </tr>))}
       </tbody>
     </table>
-  </div>
+  </div>)
 }
 
 export default GameOfLifeComponent;
