@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: jgaming-service
+  name: jgaming-api
   labels:
-    app: jgaming-service
+    app: jgaming-api
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: jgaming-service
+      app: jgaming-api
   template:
     metadata:
       labels:
-        app: jgaming-service
+        app: jgaming-api
     spec:
       containers:
-      - name: jgaming-service
-        image: docker.io/joesharpcs/jgaming-service:latest
+      - name: jgaming-api
+        image: docker.io/joesharpcs/jgaming-api:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
@@ -35,13 +35,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: jgaming-service
+  name: jgaming-api
 spec:
   type: LoadBalancer
   selector:
-    app: jgaming-service
+    app: jgaming-api
   ports:
     - protocol: TCP
       port: 8080
       targetPort: 8080
-      nodePort: 30080

@@ -1,10 +1,10 @@
-build-service: 
+build: build-api build-ui
+
+build-api: 
 	echo "Building the Service" 
-	../jgaming-service/gradlew clean build -x test -p ../jgaming-service/
-	docker build --platform=linux/amd64 -t joesharpcs/jgaming-service ../jgaming-service/
+	../api/gradlew clean build -x test -p ../api/
+	docker build --platform=linux/amd64 -t joesharpcs/jgaming-api ../api/
 
 build-ui: 
 	echo "Building the UI" 
-	docker build --platform=linux/amd64 -t joesharpcs/jgaming-ui ../jgaming-ui/
-
-build: build-service build-ui
+	docker build --platform=linux/amd64 -t joesharpcs/jgaming-ui ../ui/
