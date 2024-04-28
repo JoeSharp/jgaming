@@ -5,4 +5,4 @@ spring:
       port: ${REDIS_PORT:6379}
 
 cors:
-  ui-host: "http://localhost:5173"
+  ui-host: ${UI_DOMAIN:http://localhost:9080}

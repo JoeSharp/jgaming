@@ -1,0 +1,17 @@
+table.gol {
+  border: solid thick black;
+  border-collapse: collapse;
+}
+
+table.gol td {
+  width: 1rem;
+  height: 1rem;
+  border: solid thin black;
+}
+
+table.gol td.dead {
+  background-color: white;
+}
+table.gol td.alive {
+  background-color: green;
+}
