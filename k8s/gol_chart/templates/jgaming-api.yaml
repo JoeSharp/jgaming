@@ -31,6 +31,8 @@ spec:
             configMapKeyRef:
               name: redis
               key: REDIS_PORT
+        - name: UI_DOMAIN
+          value: http://joesharpcs.ui.info
 ---
 apiVersion: v1
 kind: Service

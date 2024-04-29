@@ -14,3 +14,4 @@ minikube image ls --format table
 
 # Minikube Config
 minikube addons enable ingress
+minikube addons enable metrics-server
