@@ -1,0 +1,7 @@
+server {
+	location / {
+		root /usr/share/nginx/html;
+		ssi on;
+		set $backendapiurl "${EXTERNAL_API_URL}";
+	}
+}

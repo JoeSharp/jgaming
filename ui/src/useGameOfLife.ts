@@ -1,8 +1,12 @@
 import { useState, useCallback } from 'react';
 import { GameOfLife, GameOfLifeApi } from './types';
 
+const backendUrl = "<!--#echo var='backendapiurl'-->";
+
 function useGameOfLife(): GameOfLifeApi {
   const [game, setGame] = useState<GameOfLife | null>(null);
+
+  console.log('Using Game of Life with Backend', backendUrl);
 
   const createGame = useCallback((name?: string) => {
     fetch(`${import.meta.env.VITE_API_HOST}/gol/create${name ? '/' + name : ''}`, { method: 'POST', mode: 'cors' })
