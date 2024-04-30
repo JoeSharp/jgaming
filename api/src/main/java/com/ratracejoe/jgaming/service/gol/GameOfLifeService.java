@@ -5,10 +5,12 @@ import com.ratracejoe.jgaming.exception.InvalidGameParameters;
 import com.ratracejoe.jgaming.model.IdentifiedGameOfLife;
 import com.ratracejoe.jgaming.model.StoredGameOfLife;
 import com.ratracejoe.jgaming.redis.GameOfLifeRepository;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import uk.co.joesharpcs.gaming.board.GridBoard;
 import uk.co.joesharpcs.gaming.gol.GameOfLife;
 import uk.co.joesharpcs.gaming.gol.GolPatterns;
 
@@ -21,6 +23,15 @@ public class GameOfLifeService implements IGameOfLifeService {
   @Override
   public IdentifiedGameOfLife create() {
     return createWithBoard(GolPatterns.BEACON);
+  }
+
+  @Override
+  public IdentifiedGameOfLife create(List<List<Boolean>> grid) {
+    UUID id = UUID.randomUUID();
+    GameOfLife newGame = new GameOfLife(new GridBoard<>(grid));
+    StoredGameOfLife stored = new StoredGameOfLife(id, newGame.toString());
+    stored = repository.save(stored);
+    return GameOfLifeRepository.read(stored);
   }
 
   @Override
