@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: jgaming-api
-        image: docker.io/joesharpcs/jgaming-api:latest
+        image: docker.io/joesharp/jgaming-api:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
@@ -32,7 +32,7 @@ spec:
               name: redis
               key: REDIS_PORT
         - name: UI_DOMAIN
-          value: http://joesharpcs.ui.info
+          value: https://jgaming.joesharpcs.co.uk
 ---
 apiVersion: v1
 kind: Service

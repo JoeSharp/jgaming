@@ -22,7 +22,7 @@ spec:
         - containerPort: 80
         env:
         - name: EXTERNAL_API_URL
-          value: https://jgaming-service.joesharpcs.co.uk
+          value: http://joesharpcs.api.info
 ---
 apiVersion: v1
 kind: Service
